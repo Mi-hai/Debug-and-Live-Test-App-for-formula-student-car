@@ -1,4 +1,7 @@
 # main.py
+import sys
+sys.dont_write_bytecode = True
+
 import customtkinter as ctk
 from pages import Debug, LiveTest  # Importing page classes
 from PIL import Image

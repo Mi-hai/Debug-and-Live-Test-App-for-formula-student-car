@@ -1,4 +1,7 @@
 # pages.py
+import sys
+sys.dont_write_bytecode = True
+
 import customtkinter as ctk
 import serial
 

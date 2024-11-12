@@ -24,7 +24,13 @@ class Debug(ctk.CTkToplevel):
         label.pack(pady=5)
 
         # Multi-line Text Box
-        self.log_box = ctk.CTkTextbox(self, width=600, height=400, font=("Arial", 16), text_color="red", fg_color="#242424",border_width=1,border_color="black", activate_scrollbars=True)
+        self.log_box = ctk.CTkTextbox(
+         self,
+         width=600, height=400,
+         font=("Arial", 16), text_color="red",
+         fg_color="#242424",border_width=1,border_color="black",
+         activate_scrollbars=True)
+        
         self.log_box.pack(pady=40)
 
         # Serial Setup
@@ -64,9 +70,11 @@ class Debug(ctk.CTkToplevel):
     def start(self):
         self.is_running = True
         self.update_textbox()
+        
 
     def stop(self):
         self.is_running = False
+        
 
     def get_text(self):
         global buffer

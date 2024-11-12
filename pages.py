@@ -11,7 +11,7 @@ class LiveTest(ctk.CTkToplevel):
         self.title("Live Test")
         self.resizable(False, False)
 
-
+#Debug Page
 class Debug(ctk.CTkToplevel):
     def __init__(self, input, default_input, *args, **kwargs):
         super().__init__(*args, **kwargs)

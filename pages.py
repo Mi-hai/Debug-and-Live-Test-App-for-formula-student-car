@@ -45,20 +45,20 @@ class Debug(ctk.CTkToplevel):
 
     def setup_buttons(self):
         # Start Button
-        text_button1 = ctk.CTkButton(self, text="Start", command=self.start, border_width=3, border_color="black")
-        text_button1.pack(pady=10, ipadx=10)
+        self.text_button1 = ctk.CTkButton(self, text="Start", command=self.start, border_width=3, border_color="black")
+        self.text_button1.pack(pady=10, ipadx=10)
 
         # Stop Button
-        text_button2 = ctk.CTkButton(self, text="Stop", command=self.stop, border_width=3, border_color="black")
-        text_button2.pack(pady=10, ipadx=10)
+        self.text_button2 = ctk.CTkButton(self, text="Stop", command=self.stop, border_width=3, border_color="black")
+        self.text_button2.pack(pady=10, ipadx=10)
 
         # Print Data Button
-        text_button3 = ctk.CTkButton(self, text="Print Data", command=self.get_text, border_width=3, border_color="black")
-        text_button3.pack(pady=10, ipadx=10)
+        self.text_button3 = ctk.CTkButton(self, text="Print Data", command=self.get_text, border_width=3, border_color="black")
+        self.text_button3.pack(pady=10, ipadx=10)
 
         # Clear log Button
-        text_button4 = ctk.CTkButton(self, text="Clear log", command=lambda: self.log_box.delete("1.0", "end"), border_width=3, border_color="black")
-        text_button4.pack(pady=10, ipadx=10)
+        self.text_button4 = ctk.CTkButton(self, text="Clear log", command=lambda: self.log_box.delete("1.0", "end"), border_width=3, border_color="black")
+        self.text_button4.pack(pady=10, ipadx=10)
 
     def update_textbox(self):
         if self.is_running:
@@ -70,18 +70,28 @@ class Debug(ctk.CTkToplevel):
     def start(self):
         self.is_running = True
         self.update_textbox()
-        
+        self.text_button3.configure(state="disabled")
+        self.text_button1.configure(state="disabled")
 
     def stop(self):
         self.is_running = False
+        self.text_button3.configure(state="normal")
+        self.text_button1.configure(state="normal")
         
 
     def get_text(self):
         global buffer
-        value = self.ser.readline().decode('utf-8').strip()
-        if value and value not in buffer:
+        value=self.ser.readline().decode('utf-8').strip()
+        ok=1
+        for i in buffer:
+            if i==value:
+                for j in buffer:
+                    self.log_box.insert("1.0",j+"\n")
+                ok=0
+                buffer.clear()
+        if value:
             buffer.append(value)
-            buffer.sort(reverse=True)
-            for line in buffer:
-                self.log_box.insert("1.0", line + "\n")
+        buffer.sort(reverse=True)
         print(buffer)
+        if ok == 1:
+            self.get_text()

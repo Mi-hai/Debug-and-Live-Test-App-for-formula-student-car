@@ -1,0 +1,179 @@
+# Description: This is the main file for the EVR project. It contains the main GUI and the code to interact with the serial port.
+
+
+
+# Importing the required libraries
+import customtkinter as ctk
+import serial
+from customtkinter import *
+from PIL import Image
+import PIL
+buffer = []
+input = ""
+default_input = "/dev/ttyUSB0"
+
+
+
+# Set up the appearance and theme for the GUI
+ctk.set_appearance_mode('dark')
+ctk.set_default_color_theme("blue")
+
+
+
+# Initialize the main window
+root = ctk.CTk()
+root.title("EVR app v0.2")
+root.geometry("1920x1080")
+root.resizable(False,False)
+
+
+
+def setup_input_section(root):
+    global input
+
+    label1= ctk.CTkLabel(root, text="Add Port /dev/ttyUSB0 or /dev/ttyACM0 \n Search in /dev folder", font=("Arial",15),text_color="white",bg_color="#363a3d")
+    label1.place(x=800,y=750)
+    # Create an input field (CTkEntry)
+    input_entry = ctk.CTkEntry(master=root, placeholder_text="/dev/tty...", border_width=1, border_color="black")
+    input_entry.place(x=865,y=790)  # Adds padding around the input field
+
+    def retrieve_input():
+        global input
+        input = input_entry.get().strip()  # Retrieve the text from the input field
+        input_entry.delete(0,"end")
+
+    submit_button = ctk.CTkButton(master=root, text="Submit", command=retrieve_input, border_width=1, border_color="black")
+    submit_button.place(x=865,y=830)
+
+
+
+setup_input_section(root)
+
+
+
+class LiveTest(ctk.CTkToplevel):
+    def __init__(toor, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        toor.geometry("900x800")
+        toor.title("Live Test")
+        toor.resizable(False,False)
+
+class Debug(ctk.CTkToplevel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.geometry("900x800")
+        self.title("Debug Page")
+        self.resizable(False,False)
+
+
+
+        # Debug Page Label
+        label = ctk.CTkLabel(self, text="Debug Page", font=("Arial", 25),text_color="white",fg_color="transparent")
+        label.pack(pady=5)
+
+
+
+        # Multi-line Text Box Example
+        log_box = ctk.CTkTextbox(self, width=600, height=400, font=("Arial", 16),text_color="red",fg_color="black",activate_scrollbars=True)
+        log_box.pack(pady=40)
+
+
+
+        # Serial Setup
+        global default_input
+        global input
+        if len(input)<2:
+            ser = serial.Serial(port=default_input, baudrate=9600, timeout=1)  # Set timeout to avoid blocking
+        else:
+            ser = serial.Serial(port=input, baudrate=9600, timeout=1)  # Set timeout to avoid blocking
+
+
+
+        # Function to update the log box with data from the serial port
+        def update_textbox():
+            global is_running
+            if is_running:
+                value = ser.readline().decode('utf-8').strip()  # Read and decode data
+            log_box.insert("1.0", value+"\n")                # Insert the new data in the log box
+            self.after(1000, update_textbox)  # Schedule the next read in (seconds)*1000 miliseconds
+
+
+
+        # Function to start the data retrieval process
+        def start():
+            text_button3.configure(state="disabled")
+            global is_running
+            is_running = True
+            update_textbox()
+
+
+
+        # Function to stop the data retrieval process
+        def stop():
+            text_button3.configure(state="normal")
+            global is_running
+            is_running = False
+
+
+
+        # Function to manually retrieve text from the log
+        def get_text(): 
+            value=ser.readline().decode('utf-8').strip()
+            ok=1
+            for i in buffer:
+                if i==value:
+                    for j in buffer:
+                            log_box.insert("1.0",j+"\n")
+                    ok=0
+                    buffer.clear()
+            if value:
+                buffer.append(value)
+                buffer.sort(reverse=True)
+
+            print(buffer)
+            if ok == 1:
+                get_text()
+
+
+
+        # Button to start the data retrieval process from the serial port
+        text_button1 = ctk.CTkButton(self, text="Start",command=start,border_width=3,border_color="black")
+        text_button1.pack(pady=10,ipadx=10)
+
+
+
+        # Button to stop the data retrieval process from the serial port
+        text_button2 = ctk.CTkButton(self, text="Stop",command=stop,border_width=3,border_color="black")
+        text_button2.pack(pady=10,ipadx=10)
+
+
+
+        # Button to manually retrieve text from the log
+        text_button3 = ctk.CTkButton(self,text="Print Data",command=get_text,border_width=3,border_color="black")
+        text_button3.pack(pady=10,ipadx=10)
+
+
+
+        # Button to clear the log
+        text_button4 = ctk.CTkButton(self,text="Clear log",command=lambda: log_box.delete("1.0", "end"),border_width=3,border_color="black")
+        text_button4.pack(pady=10,ipadx=10)
+
+
+#Button to open secondary pages
+text_button5 = ctk.CTkButton(root, text="Debug Page", command=lambda:Debug(), border_width=3, border_color="black", width=200, height=70)
+text_button5.place(x=400, y=550)
+
+text_button5 = ctk.CTkButton(root, text="Live Test", command=lambda:LiveTest(), border_width=3, border_color="black", width=200, height=70)
+text_button5.place(x=1235, y=550)
+
+
+
+# Background Image for the GUI
+my_image = ctk.CTkImage(dark_image=Image.open("/home/mihai/Documents/python-1/EVR/logo.jpeg"),size=(1920,1000))
+image_label = ctk.CTkLabel(root, image=my_image, text="")
+image_label.place(x=0,y=-40,relwidth=1, relheight=1)
+image_label.lower()
+
+# Run the Tkinter main loop
+
+root.mainloop()

@@ -62,6 +62,7 @@ setup_input_section(root)
 
 
 
+# Set the path for the Filter file based on the runtime environment
 if hasattr(sys, "_MEIPASS"):
     # Running as a bundled app
     assets_path = os.path.join(sys._MEIPASS)
@@ -70,6 +71,7 @@ else:
     assets_path = os.path.join(os.path.dirname(__file__))
 path1 = os.path.join(assets_path, "Filter.txt")
 print(path1)
+
 
 
 # Buttons to open secondary pages

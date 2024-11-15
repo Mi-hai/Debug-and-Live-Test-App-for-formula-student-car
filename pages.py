@@ -153,7 +153,7 @@ class Debug(ctk.CTkToplevel):
     def start(self):
         self.is_running = True
         self.update_textbox()
-        self.text_button3.configure(state="disabled")
+        #self.text_button3.configure(state="disabled")
         self.text_button1.configure(state="disabled")
 
 
@@ -161,7 +161,7 @@ class Debug(ctk.CTkToplevel):
     # Function to stop the serial communication
     def stop(self):
         self.is_running = False
-        self.text_button3.configure(state="normal")
+        #self.text_button3.configure(state="normal")
         self.text_button1.configure(state="normal")
         
 

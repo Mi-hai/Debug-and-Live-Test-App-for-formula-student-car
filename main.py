@@ -62,8 +62,18 @@ setup_input_section(root)
 
 
 
+if hasattr(sys, "_MEIPASS"):
+    # Running as a bundled app
+    assets_path = os.path.join(sys._MEIPASS)
+else:
+    # Running as a script
+    assets_path = os.path.join(os.path.dirname(__file__))
+path1 = os.path.join(assets_path, "Filter.txt")
+print(path1)
+
+
 # Buttons to open secondary pages
-text_button_debug = ctk.CTkButton(root, text="Debug Page", command=lambda: Debug(input, default_input,"/home/mihai/Documents/python-1/EVR/Debug-and-Live-Test-App-for-formula-student-car/Filter.txt"), border_width=3, border_color="black", width=200, height=70)
+text_button_debug = ctk.CTkButton(root, text="Debug Page", command=lambda: Debug(input, default_input,filter_file=path1), border_width=3, border_color="black", width=200, height=70)
 text_button_debug.place(x=400, y=550)
 
 text_button_live_test = ctk.CTkButton(root, text="Live Test", command=lambda: LiveTest(), border_width=3, border_color="black", width=200, height=70)

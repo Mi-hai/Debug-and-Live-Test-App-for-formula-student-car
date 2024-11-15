@@ -72,9 +72,14 @@ text_button_live_test.place(x=1235, y=550)
 
 
 # Background Image for the GUI
-script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory where this script is located
-image_path = os.path.join(script_dir, "assets", "logo.jpeg")  # Construct the image path
-
+# Set the path for the assets folder based on the runtime environment
+if hasattr(sys, "_MEIPASS"):
+    # Running as a bundled app
+    assets_path = os.path.join(sys._MEIPASS, "assets")
+else:
+    # Running as a script
+    assets_path = os.path.join(os.path.dirname(__file__), "assets")
+image_path = os.path.join(assets_path, "logo.jpeg")
 my_image = ctk.CTkImage(dark_image=Image.open(image_path), size=(1920, 1000))
 image_label = ctk.CTkLabel(root, image=my_image, text="")
 image_label.place(x=0, y=-40, relwidth=1, relheight=1)

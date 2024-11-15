@@ -91,6 +91,7 @@ class Debug(ctk.CTkToplevel):
                         if parts:
                             id_part = parts[0].strip()  # Get the part before the colon
                             criteria.add(id_part)  # Add the ID to the set
+                #print(criteria)
                 return criteria
         except FileNotFoundError:
             print(f"Filter file '{file_path}' not found.")
@@ -124,21 +125,24 @@ class Debug(ctk.CTkToplevel):
         global index
         if self.is_running:
             # Read and decode the incoming data from serial
-            raw_value = self.ser.readline().decode('utf-8').strip()
+            raw_value = self.ser.readline().decode('utf-8')
             if raw_value:
                 # Parse the ID and message (assuming IDs are single-digit numbers or can be extended to more characters)
-                id_part = raw_value[0].strip()  # Extract everything before the first colon (ID)
+                id_part = raw_value[0]  # Extract everything before the first colon (ID)
                 message_part = raw_value[1:].strip()  # Extract the part after the colon (message)
                 # Check if the ID is in the filter criteria
                 print(ord(id_part))
                 for i in range(len(index)):
                     if ord(id_part) == int(index[i]):
-                        
                         # Route to the appropriate log box (you can modify this logic as needed)
-                        if ord(id_part) == 1:
+                        if ord(id_part) == 11:
                             self.log_box1.insert("1.0", message_part + "\n")
                         elif ord(id_part) == 2:
                             self.log_box2.insert("1.0", message_part + "\n")
+                        elif ord(id_part) == 127:
+                            self.log_box1.insert("1.0", message_part + "\n")
+                        elif ord(id_part) == 1:
+                            self.log_box1.insert("1.0", message_part + "\n")
                         # Add more conditions if needed for other IDs
                         else:
                             # Log for other filtered IDs if required

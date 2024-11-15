@@ -70,7 +70,6 @@ else:
     # Running as a script
     assets_path = os.path.join(os.path.dirname(__file__))
 path1 = os.path.join(assets_path, "Filter.txt")
-print(path1)
 
 
 

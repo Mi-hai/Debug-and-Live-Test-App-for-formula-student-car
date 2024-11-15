@@ -63,7 +63,7 @@ setup_input_section(root)
 
 
 # Buttons to open secondary pages
-text_button_debug = ctk.CTkButton(root, text="Debug Page", command=lambda: Debug(input, default_input), border_width=3, border_color="black", width=200, height=70)
+text_button_debug = ctk.CTkButton(root, text="Debug Page", command=lambda: Debug(input, default_input,"/home/mihai/Documents/python-1/EVR/Debug-and-Live-Test-App-for-formula-student-car/Filter.txt"), border_width=3, border_color="black", width=200, height=70)
 text_button_debug.place(x=400, y=550)
 
 text_button_live_test = ctk.CTkButton(root, text="Live Test", command=lambda: LiveTest(), border_width=3, border_color="black", width=200, height=70)

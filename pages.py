@@ -29,14 +29,21 @@ class Debug(ctk.CTkToplevel):
         super().__init__(*args, **kwargs)
         self.geometry("900x800")
         self.title("Debug Page")
-        self.resizable(False, False)
+        self.resizable(True, True)
 
+
+
+        #Make the setup for resizable window
+        self.grid_rowconfigure(1, weight=1) # Row for textboxes
+        self.grid_columnconfigure(0, weight=1)  # Column for log_box1
+        self.grid_columnconfigure(1, weight=1)  # Column for log_box2
+        self.grid_columnconfigure(2, weight=1)  # Column for log_box3
 
 
 
         # Debug Page Label
         label = ctk.CTkLabel(self, text="Debug Page", font=("Arial", 25), text_color="white", fg_color="transparent")
-        label.pack(pady=5)
+        label.grid(row=0, column=1, pady=10)
 
 
 
@@ -47,7 +54,7 @@ class Debug(ctk.CTkToplevel):
             font=("Arial", 16), text_color="red",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
-        self.log_box1.pack(pady=20)
+        self.log_box1.grid(row=1, column=0, padx=10, sticky="nsew",)
 
         self.log_box2 = ctk.CTkTextbox(
             self,
@@ -55,8 +62,16 @@ class Debug(ctk.CTkToplevel):
             font=("Arial", 16), text_color="blue",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
-        self.log_box2.pack(pady=20)
+        self.log_box2.grid(row=1, column=1, padx=10, sticky="nsew")
 
+        self.log_box3 = ctk.CTkTextbox(
+            self,
+            width=600, height=200,
+            font=("Arial", 16), text_color="green",
+            fg_color="#242424", border_width=1, border_color="black",
+            activate_scrollbars=True)
+        self.log_box3.grid(row=1, column=2, padx=10, sticky="nsew")
+        
 
 
         # Serial Setup
@@ -104,11 +119,11 @@ class Debug(ctk.CTkToplevel):
 
         # Start Button
         self.text_button1 = ctk.CTkButton(self, text="Start", command=self.start, border_width=3, border_color="black")
-        self.text_button1.pack(pady=10, ipadx=10)
+        self.text_button1.grid(row=3,column=1, pady=10, ipadx=10)
 
         # Stop Button
         self.text_button2 = ctk.CTkButton(self, text="Stop", command=self.stop, border_width=3, border_color="black")
-        self.text_button2.pack(pady=10, ipadx=10)
+        self.text_button2.grid(row=4,column=1, pady=10, ipadx=10)
 
         # # Print Data Button
         # self.text_button3 = ctk.CTkButton(self, text="Print Data", command=self.get_text, border_width=3, border_color="black")
@@ -116,7 +131,7 @@ class Debug(ctk.CTkToplevel):
 
         # Clear log Button
         self.text_button4 = ctk.CTkButton(self, text="Clear log", command=self.clear_logs, border_width=3, border_color="black")
-        self.text_button4.pack(pady=10, ipadx=10)
+        self.text_button4.grid(row=5,column=1, pady=10, ipadx=10)
 
 
 
@@ -135,15 +150,12 @@ class Debug(ctk.CTkToplevel):
                 for i in range(len(index)):
                     if ord(id_part) == int(index[i]):
                         # Route to the appropriate log box (you can modify this logic as needed)
-                        if ord(id_part) == 11:
-                            self.log_box1.insert("1.0", message_part + "\n")
-                        elif ord(id_part) == 2:
-                            self.log_box2.insert("1.0", message_part + "\n")
-                        elif ord(id_part) == 127:
-                            self.log_box1.insert("1.0", message_part + "\n")
-                        elif ord(id_part) == 1:
-                            self.log_box1.insert("1.0", message_part + "\n")
-                        # Add more conditions if needed for other IDs
+                        if ord(id_part) in range(1, 10) :
+                            self.log_box1.insert("1.0",message_part+"\n")
+                        elif ord(id_part) in range(10, 20):
+                            self.log_box2.insert("1.0",message_part+"\n")
+                        elif ord(id_part) in range(20, 128):
+                            self.log_box3.insert("1.0",message_part+"\n")
                         else:
                             # Log for other filtered IDs if required
                             self.log_box2.insert("1.0", f"ID {id_part}: {message_part}\n")
@@ -193,3 +205,4 @@ class Debug(ctk.CTkToplevel):
     def clear_logs(self):
         self.log_box1.delete("1.0", "end")
         self.log_box2.delete("1.0", "end")
+        self.log_box3.delete("1.0", "end")

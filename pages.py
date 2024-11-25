@@ -31,9 +31,10 @@ class LiveTest(ctk.CTkToplevel):
         #Creates a dropdown and a screen to display dynamic content.
         # Dropdown menu
         self.options = ["Option 1", "Option 2", "Option 3"]
-        self.dropdown = ctk.CTkOptionMenu(self, values=self.options, command=self.update_screen)
+        self.dropdown = ctk.CTkComboBox(self, values=self.options, command=self.update_screen)
         self.dropdown.set("Select an Option")
-        self.dropdown.grid(row=0, column=0, padx=10, sticky="ew")
+        self.dropdown.grid(row=0, column=0, padx=20, sticky="ew")
+        
 
         # Screen to display data
         self.screen = ctk.CTkTextbox(
@@ -42,7 +43,7 @@ class LiveTest(ctk.CTkToplevel):
             font=("Arial", 16), text_color="red",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
-        self.screen.grid(row=1, column=0, padx=20, sticky="nsew",)
+        self.screen.grid(row=1, column=1, padx=10, sticky="nsew",)
 
     def update_screen(self, choice):
         # Updates the screen based on the dropdown selection.

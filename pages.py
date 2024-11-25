@@ -19,8 +19,44 @@ class LiveTest(ctk.CTkToplevel):
         super().__init__(*args, **kwargs)
         self.geometry("900x800")
         self.title("Live Test")
-        self.resizable(False, False)
+        self.resizable(True,True)
 
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+# Dropdown and Screen Section
+        self.create_dropdown_and_screen()
+        
+    def create_dropdown_and_screen(self):
+        #Creates a dropdown and a screen to display dynamic content.
+        # Dropdown menu
+        self.options = ["Option 1", "Option 2", "Option 3"]
+        self.dropdown = ctk.CTkOptionMenu(self, values=self.options, command=self.update_screen)
+        self.dropdown.set("Select an Option")
+        self.dropdown.grid(row=0, column=0, padx=10, sticky="ew")
+
+        # Screen to display data
+        self.screen = ctk.CTkTextbox(
+            self,
+            width=600, height=200,
+            font=("Arial", 16), text_color="red",
+            fg_color="#242424", border_width=1, border_color="black",
+            activate_scrollbars=True)
+        self.screen.grid(row=1, column=0, padx=20, sticky="nsew",)
+
+    def update_screen(self, choice):
+        # Updates the screen based on the dropdown selection.
+        if choice == "Option 1":
+            self.screen.delete("1.0","end")
+            self.screen.insert("1.0", "Displaying data for Option 1")
+
+        elif choice == "Option 2":
+            self.screen.delete("1.0","end")
+            self.screen.insert("1.0", "Displaying data for Option 2")
+            
+        elif choice == "Option 3":
+            self.screen.delete("1.0","end")
+            self.screen.insert("1.0", "Displaying data for Option 3")
 
 
 #  Debug Page
@@ -106,7 +142,6 @@ class Debug(ctk.CTkToplevel):
                         if parts:
                             id_part = parts[0].strip()  # Get the part before the colon
                             criteria.add(id_part)  # Add the ID to the set
-                #print(criteria)
                 return criteria
         except FileNotFoundError:
             print(f"Filter file '{file_path}' not found.")
@@ -201,7 +236,7 @@ class Debug(ctk.CTkToplevel):
     #         self.get_text()
 
 
-    # Function to clear both logs
+    # Function to clear all logs
     def clear_logs(self):
         self.log_box1.delete("1.0", "end")
         self.log_box2.delete("1.0", "end")

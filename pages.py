@@ -13,6 +13,8 @@ import serial
 buffer = []  # Store buffer globally
 index = []  # Store index globally
 
+
+
 # Live Test Page
 class LiveTest(ctk.CTkToplevel):
     def __init__(self, *args, **kwargs):
@@ -24,14 +26,23 @@ class LiveTest(ctk.CTkToplevel):
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
+
+
 # Dropdown and Screen Section
         self.create_dropdown_and_screen()
         
+
+#Creates a dropdown and a screen to display dynamic content.        
     def create_dropdown_and_screen(self):
-        #Creates a dropdown and a screen to display dynamic content.
-        # Dropdown menu
+# Dropdown menu
         self.options = ["Option 1", "Option 2", "Option 3"]
-        self.dropdown = ctk.CTkComboBox(self, values=self.options, command=self.update_screen)
+        self.dropdown = ctk.CTkComboBox(
+            self,
+            values=self.options, command=self.update_screen,
+            state="readonly",height=60,font=("Arial",20)
+            )
+
+        self.dropdown.configure(dropdown_font=("Arial",24))
         self.dropdown.set("Select an Option")
         self.dropdown.grid(row=0, column=0, padx=20, sticky="ew")
         
@@ -43,10 +54,12 @@ class LiveTest(ctk.CTkToplevel):
             font=("Arial", 16), text_color="red",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
-        self.screen.grid(row=1, column=1, padx=10, sticky="nsew",)
+        self.screen.grid(row=1, column=1, padx=10, sticky="new",)
 
+
+
+# Updates the screen based on the dropdown selection.
     def update_screen(self, choice):
-        # Updates the screen based on the dropdown selection.
         if choice == "Option 1":
             self.screen.delete("1.0","end")
             self.screen.insert("1.0", "Displaying data for Option 1")

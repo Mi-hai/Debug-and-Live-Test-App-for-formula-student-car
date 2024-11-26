@@ -25,6 +25,7 @@ class LiveTest(ctk.CTkToplevel):
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1,weight=1)
 
 
 
@@ -39,8 +40,7 @@ class LiveTest(ctk.CTkToplevel):
         self.dropdown = ctk.CTkComboBox(
             self,
             values=self.options, command=self.update_screen,
-            state="readonly",height=60,font=("Arial",20)
-            )
+            state="readonly",height=60,font=("Arial",16))
 
         self.dropdown.configure(dropdown_font=("Arial",24))
         self.dropdown.set("Select an Option")

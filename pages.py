@@ -1,76 +1,166 @@
-# pages.py
 import sys
+import sqlite3
 sys.dont_write_bytecode = True
 
-
-
-# Importing the necessary modules
 import customtkinter as ctk
 import serial
-
-
 
 buffer = []  # Store buffer globally
 index = []  # Store index globally
 
-
-
-# Live Test Page
 class LiveTest(ctk.CTkToplevel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, input, default_input, filter_file, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.geometry("900x800")
         self.title("Live Test")
-        self.resizable(True,True)
-
+        self.resizable(True, True)
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1,weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        # Initialize database connection and cursor here
+        self.conn = sqlite3.connect('battery.db')
+        self.c = self.conn.cursor()
 
+        # Create battery_table if not exists
+        self.c.execute('''CREATE TABLE IF NOT EXISTS battery_table(
+            battery_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            battery_voltage REAL,
+            battery_state CHAR(16)
+        )''')
 
-# Dropdown and Screen Section
+        # self.c.execute('''INSERT INTO battery_table (battery_voltage, battery_state) VALUES (?, ?)''', (3.7, 'Charging'))
+        # self.c.execute('''INSERT INTO battery_table (battery_voltage, battery_state) VALUES (?, ?)''', (4.2, 'Discharging'))
+        # self.conn.commit()
+
+        # Initialize serial connection
+        if len(input) < 2:
+            self.ser = serial.Serial(port=default_input, baudrate=9600, timeout=1)
+        else:
+            self.ser = serial.Serial(port=input, baudrate=9600, timeout=1)
+
+        # Load filter criteria
+        self.filter_criteria = self.load_filter_criteria(filter_file)
+        for i in self.filter_criteria:
+            index.append(i)
+
+        # Start UI components
         self.create_dropdown_and_screen()
-        
+        self.get_data()
 
-#Creates a dropdown and a screen to display dynamic content.        
+    #Create the filter criteria
+    def load_filter_criteria(self, file_path):
+        try:
+            with open(file_path, "r") as file:
+                criteria = set()  # Store only the IDs as a set
+                for line in file:
+                    if line.strip():
+                        parts = line.split(":")
+                        if parts:
+                            id_part = parts[0].strip()  # Get the part before the colon
+                            criteria.add(id_part)  # Add the ID to the set
+                return criteria
+        except FileNotFoundError:
+            print(f"Filter file '{file_path}' not found.")
+            return set()
+
+    # Function to get data from the serial port and insert into the database
+    def get_data(self):
+            raw_value = self.ser.readline().decode('utf-8')
+            if raw_value:
+                # Parse the ID and message (assuming IDs are single-digit numbers or can be extended to more characters)
+                id_part = raw_value[0]  # Extract everything before the first colon (ID)
+                message_part = raw_value[1:].strip()  # Extract the part after the colon (message)
+                # Check if the ID is in the filter criteria
+                print(ord(id_part))
+                for i in range(len(index)):
+                    if ord(id_part) in range(1, 10):
+                        if ";" in message_part:
+                                 # Split the message part on ';' to separate voltage and state
+                                voltage, state = message_part.split(";")
+                                voltage = voltage.strip()  # Extract voltage
+                                state = state.strip()      # Extract state (e.g., Charging or Discharging)
+                                # Insert data into the database
+                                print(voltage)
+                                self.c.execute('''INSERT INTO battery_table (battery_voltage, battery_state) VALUES (?, ?)''', (voltage, state))
+                                self.conn.commit()
+                                self.refresh_dropdown()
+
+            # Schedule the next update
+            self.after(1000, self.get_data)
+
+    # Function to refresh the dropdown menu with updated data
+    def refresh_dropdown(self):
+        # Fetch updated data from the database
+        self.c.execute('SELECT battery_id, battery_voltage, battery_state FROM battery_table')
+        rows = self.c.fetchall()
+
+        # Format data for the dropdown
+        self.options = [f"Battery {row[0]}" for row in rows]  # Use only the battery_id for display
+
+        # Update the dropdown menu with the new options
+        self.dropdown.configure(values=self.options)
+
+
+    # Function to create the dropdown menu and screen
     def create_dropdown_and_screen(self):
-# Dropdown menu
-        self.options = ["Option 1", "Option 2", "Option 3"]
+        # Fetch data from the database
+        self.c.execute('SELECT battery_id, battery_voltage, battery_state FROM battery_table')
+        rows = self.c.fetchall()
+
+        # Format data for the dropdown: "Index - Name - Voltage - Status"
+        self.options = []
+        for row in rows:
+            battery_id, voltage, state = row
+            self.options.append(f"Battery {battery_id}")
+
+        # Create the dropdown menu
         self.dropdown = ctk.CTkComboBox(
             self,
-            values=self.options, command=self.update_screen,
-            state="readonly",height=60,font=("Arial",16))
-
-        self.dropdown.configure(dropdown_font=("Arial",24))
-        self.dropdown.set("Select an Option")
+            values=self.options,
+            command=self.update_screen,  # Only called when dropdown value changes
+            state="readonly", height=60, font=("Arial", 16)
+        )
+        self.dropdown.configure(dropdown_font=("Arial", 24))
+        self.dropdown.set("Select a Battery")
         self.dropdown.grid(row=0, column=0, padx=20, sticky="ew")
-        
 
-        # Screen to display data
+        # Create a screen to display the selected battery data
         self.screen = ctk.CTkTextbox(
             self,
             width=600, height=200,
             font=("Arial", 16), text_color="red",
             fg_color="#242424", border_width=1, border_color="black",
-            activate_scrollbars=True)
-        self.screen.grid(row=1, column=1, padx=10, sticky="new",)
+            activate_scrollbars=True
+        )
+        self.screen.grid(row=1, column=1, padx=10, sticky="new")
 
-
-
-# Updates the screen based on the dropdown selection.
     def update_screen(self, choice):
-        if choice == "Option 1":
-            self.screen.delete("1.0","end")
-            self.screen.insert("1.0", "Displaying data for Option 1")
+        # Extract battery_id from the choice (assuming format: "Battery <id> - ...")
+        if choice.startswith("Battery"):
+            battery_id = choice.split()[1]
 
-        elif choice == "Option 2":
-            self.screen.delete("1.0","end")
-            self.screen.insert("1.0", "Displaying data for Option 2")
-            
-        elif choice == "Option 3":
-            self.screen.delete("1.0","end")
-            self.screen.insert("1.0", "Displaying data for Option 3")
+            # Fetch detailed information for the selected battery
+            self.c.execute('SELECT battery_voltage, battery_state FROM battery_table WHERE battery_id = ?', (battery_id,))
+            result = self.c.fetchone()
+
+            if result:
+                voltage, state = result
+                self.screen.delete("1.0", "end")
+                self.screen.insert("1.0", f"Battery {battery_id}:\nVoltage: {voltage}V\nState: {state}")
+            else:
+                self.screen.delete("1.0", "end")
+                self.screen.insert("1.0", f"Battery {battery_id} details not found.")
+
+    def on_close(self):
+        """Close the database connection when the window is destroyed."""
+        self.c.execute('DELETE FROM battery_table')
+        self.conn.commit()
+        self.c.execute('DROP TABLE IF EXISTS battery_table')
+        self.conn.commit()
+        self.conn.close()
+        self.destroy()
 
 
 #  Debug Page

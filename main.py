@@ -77,7 +77,7 @@ path1 = os.path.join(assets_path, "Filter.txt")
 text_button_debug = ctk.CTkButton(root, text="Debug Page", command=lambda: Debug(input, default_input,filter_file=path1), border_width=3, border_color="black", width=200, height=70)
 text_button_debug.place(x=400, y=550)
 
-text_button_live_test = ctk.CTkButton(root, text="Live Test", command=lambda: LiveTest(), border_width=3, border_color="black", width=200, height=70)
+text_button_live_test = ctk.CTkButton(root, text="Live Test", command=lambda: LiveTest(input, default_input,filter_file=path1), border_width=3, border_color="black", width=200, height=70)
 text_button_live_test.place(x=1235, y=550)
 
 

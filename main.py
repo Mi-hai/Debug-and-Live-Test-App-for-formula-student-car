@@ -12,10 +12,15 @@ import os
 
 
 
+os.environ["TCL_LIBRARY"] = r"C:\Users\Mihai\AppData\Local\Programs\Python\Python313\tcl\tcl8.6"
+os.environ["TK_LIBRARY"] = r"C:\Users\Mihai\AppData\Local\Programs\Python\Python313\tcl\tk8.6"
+
+
+
 # Initialize the main window
 root = ctk.CTk()
 root.title("EVR app")
-root.geometry("1920x1080")
+root.geometry("1820x1000")
 root.resizable(False, False)
 
 

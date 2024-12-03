@@ -25,14 +25,10 @@ class LiveTest(ctk.CTkToplevel):
 
         # Create battery_table if not exists
         self.c.execute('''CREATE TABLE IF NOT EXISTS battery_table(
-            battery_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            battery_id INTEGER PRIMARY KEY,
             battery_voltage REAL,
             battery_state CHAR(16)
         )''')
-
-        # self.c.execute('''INSERT INTO battery_table (battery_voltage, battery_state) VALUES (?, ?)''', (3.7, 'Charging'))
-        # self.c.execute('''INSERT INTO battery_table (battery_voltage, battery_state) VALUES (?, ?)''', (4.2, 'Discharging'))
-        # self.conn.commit()
 
         # Initialize serial connection
         if len(input) < 2:
@@ -71,11 +67,14 @@ class LiveTest(ctk.CTkToplevel):
             if raw_value:
                 # Parse the ID and message (assuming IDs are single-digit numbers or can be extended to more characters)
                 id_part = raw_value[0]  # Extract everything before the first colon (ID)
-                message_part = raw_value[1:].strip()  # Extract the part after the colon (message)
+                message_part1 = raw_value[1:].strip()  # Extract the part after the colon (message)
+                id ,message_part= message_part1.split(":",1)
+                id =id.strip()
+                message_part = message_part.strip()
                 # Check if the ID is in the filter criteria
                 print(ord(id_part))
                 for i in range(len(index)):
-                    if ord(id_part) in range(1, 10):
+                    if ord(id_part) in range(1, 5):
                         if ";" in message_part:
                                  # Split the message part on ';' to separate voltage and state
                                 voltage, state = message_part.split(";")
@@ -83,7 +82,13 @@ class LiveTest(ctk.CTkToplevel):
                                 state = state.strip()      # Extract state (e.g., Charging or Discharging)
                                 # Insert data into the database
                                 print(voltage)
-                                self.c.execute('''INSERT INTO battery_table (battery_voltage, battery_state) VALUES (?, ?)''', (voltage, state))
+                                self.c.execute('''
+                                INSERT INTO battery_table (battery_id, battery_voltage, battery_state)
+                                VALUES (?, ?, ?)
+                                ON CONFLICT(battery_id) DO UPDATE SET 
+                                    battery_voltage = excluded.battery_voltage,
+                                    battery_state = excluded.battery_state
+                            ''', (id, voltage, state))
                                 self.conn.commit()
                                 self.refresh_dropdown()
 
@@ -264,10 +269,6 @@ class Debug(ctk.CTkToplevel):
         self.text_button2 = ctk.CTkButton(self, text="Stop", command=self.stop, border_width=3, border_color="black")
         self.text_button2.grid(row=4,column=1, pady=10, ipadx=10)
 
-        # # Print Data Button
-        # self.text_button3 = ctk.CTkButton(self, text="Print Data", command=self.get_text, border_width=3, border_color="black")
-        # self.text_button3.pack(pady=10, ipadx=10)
-
         # Clear log Button
         self.text_button4 = ctk.CTkButton(self, text="Clear log", command=self.clear_logs, border_width=3, border_color="black")
         self.text_button4.grid(row=5,column=1, pady=10, ipadx=10)
@@ -319,25 +320,6 @@ class Debug(ctk.CTkToplevel):
         #self.text_button3.configure(state="normal")
         self.text_button1.configure(state="normal")
         
-
-
-    # # Function to get the text from the serial communication
-    # def get_text(self):
-    #     global buffer
-    #     value=self.ser.readline().decode('utf-8').strip()
-    #     ok=1
-    #     for i in buffer:
-    #         if i==value:
-    #             for j in buffer:
-    #                 self.log_box.insert("1.0",j+"\n")
-    #             ok=0
-    #             buffer.clear()
-    #     if value:
-    #         buffer.append(value)
-    #     buffer.sort(reverse=True)
-    #     print(buffer)
-    #     if ok == 1:
-    #         self.get_text()
 
 
     # Function to clear all logs

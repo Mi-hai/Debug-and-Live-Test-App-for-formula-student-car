@@ -8,6 +8,7 @@ import serial
 buffer = []  # Store buffer globally
 index = []  # Store index globally
 
+# Live Test Page
 class LiveTest(ctk.CTkToplevel):
     def __init__(self, input, default_input, filter_file, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -22,6 +22,7 @@ class LiveTest(ctk.CTkToplevel):
         self.grid_columnconfigure(1, weight=1)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
         self.battery_history={}
+        self.current_battery_id = None
 
         # Initialize database connection and cursor here
         self.conn = sqlite3.connect('battery.db')
@@ -77,7 +78,7 @@ class LiveTest(ctk.CTkToplevel):
                 id =id.strip()
                 message_part = message_part.strip()
                 # Check if the ID is in the filter criteria
-                print(ord(id_part))
+                #print(ord(id_part))
                 for i in range(len(index)):
                     if ord(id_part) in range(1, 5):
                         if ";" in message_part:
@@ -99,8 +100,12 @@ class LiveTest(ctk.CTkToplevel):
                                     battery_voltage = excluded.battery_voltage,
                                     battery_state = excluded.battery_state
                             ''', (id, voltage, state))
+                                print(f"ID: {id}, Voltage: {voltage}, State: {state}")
                                 self.conn.commit()
                                 self.refresh_dropdown()
+                        if id == self.current_battery_id:
+                             self.refresh_graph()
+
 
         # Schedule the next update
         self.after(1000, self.get_data)
@@ -116,7 +121,6 @@ class LiveTest(ctk.CTkToplevel):
 
         # Update the dropdown menu with the new options
         self.dropdown.configure(values=self.options)
-
 
     # Function to create the dropdown menu and screen
     def create_dropdown_and_screen(self):
@@ -160,6 +164,8 @@ class LiveTest(ctk.CTkToplevel):
         # Extract battery_id from the choice (assuming format: "Battery <id> - ...")
         if choice.startswith("Battery"):
             battery_id = choice.split()[1]
+            self.current_battery_id = battery_id
+            self.refresh_graph()
 
             # Fetch detailed information for the selected battery
             self.c.execute('SELECT battery_voltage, battery_state FROM battery_table WHERE battery_id = ?', (battery_id,))
@@ -172,15 +178,29 @@ class LiveTest(ctk.CTkToplevel):
             else:
                 self.screen.delete("1.0", "end")
                 self.screen.insert("1.0", f"Battery {battery_id} details not found.")
-            # Check if the battery has historical data
-            if battery_id in self.battery_history:
-                self.ax.clear()
-                self.ax.plot(self.battery_history[battery_id], label=f"Battery {battery_id} Voltage",)
-                self.ax.set_title(f"Battery {battery_id} Voltage Evolution")
-                self.ax.set_xlabel("Time")
-                self.ax.set_ylabel("Voltage (V)")
-                self.ax.legend()
-                self.canvas.draw()
+
+
+    # Function to refresh the graph with updated data
+    def refresh_graph(self):
+        if self.current_battery_id in self.battery_history:
+            self.ax.clear()
+            self.ax.plot(self.battery_history[self.current_battery_id], label=f"Battery {self.current_battery_id} Voltage")
+            self.ax.set_title(f"Battery {self.current_battery_id} Voltage Evolution")
+            self.ax.set_xlabel("Time")
+            self.ax.set_ylabel("Voltage (V)")
+            self.ax.legend()
+            self.canvas.draw()
+            
+            self.c.execute('SELECT battery_voltage, battery_state FROM battery_table WHERE battery_id = ?', (self.current_battery_id,))
+            result = self.c.fetchone()
+
+            if result:
+                voltage, state = result
+                self.screen.delete("1.0", "end")
+                self.screen.insert("1.0", f"Battery {self.current_battery_id}:\nVoltage: {voltage}V\nState: {state}")
+            else:
+                self.screen.delete("1.0", "end")
+                self.screen.insert("1.0", f"Battery {self.current_battery_id} details not found.")
 
     def on_close(self):
         # Close the database connection and kill graph window
@@ -192,7 +212,6 @@ class LiveTest(ctk.CTkToplevel):
         self.conn.commit()
         self.conn.close()
         self.destroy()
-
 #  Debug Page
 class Debug(ctk.CTkToplevel):
     def __init__(self, input, default_input, filter_file, *args, **kwargs):

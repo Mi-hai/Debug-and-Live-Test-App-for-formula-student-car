@@ -5,10 +5,12 @@ sys.dont_write_bytecode = True
 import customtkinter as ctk
 import serial
 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 buffer = []  # Store buffer globally
 index = []  # Store index globally
 
-# Live Test Page
 class LiveTest(ctk.CTkToplevel):
     def __init__(self, input, default_input, filter_file, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -19,6 +21,7 @@ class LiveTest(ctk.CTkToplevel):
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
+        self.battery_history={}
 
         # Initialize database connection and cursor here
         self.conn = sqlite3.connect('battery.db')
@@ -64,11 +67,12 @@ class LiveTest(ctk.CTkToplevel):
 
     # Function to get data from the serial port and insert into the database
     def get_data(self):
-            raw_value = self.ser.readline().decode('utf-8')
-            if raw_value:
-                # Parse the ID and message (assuming IDs are single-digit numbers or can be extended to more characters)
-                id_part = raw_value[0]  # Extract everything before the first colon (ID)
-                message_part1 = raw_value[1:].strip()  # Extract the part after the colon (message)
+        raw_value = self.ser.readline().decode('utf-8')
+        if raw_value:
+            # Parse the ID and message (assuming IDs are single-digit numbers or can be extended to more characters)
+            id_part = raw_value[0]  # Extract everything before the first colon (ID)
+            message_part1 = raw_value[1:].strip()  # Extract the part after the colon (message)
+            if":" in message_part1:
                 id ,message_part= message_part1.split(":",1)
                 id =id.strip()
                 message_part = message_part.strip()
@@ -77,12 +81,17 @@ class LiveTest(ctk.CTkToplevel):
                 for i in range(len(index)):
                     if ord(id_part) in range(1, 5):
                         if ";" in message_part:
-                                 # Split the message part on ';' to separate voltage and state
+                                # Split the message part on ';' to separate voltage and state
                                 voltage, state = message_part.split(";")
                                 voltage = voltage.strip()  # Extract voltage
                                 state = state.strip()      # Extract state (e.g., Charging or Discharging)
+
+                                # Update battery voltage history
+                                if id not in self.battery_history:
+                                    self.battery_history[id] = []
+                                self.battery_history[id].append(float(voltage))
+
                                 # Insert data into the database
-                                print(voltage)
                                 self.c.execute('''
                                 INSERT INTO battery_table (battery_id, battery_voltage, battery_state)
                                 VALUES (?, ?, ?)
@@ -93,8 +102,8 @@ class LiveTest(ctk.CTkToplevel):
                                 self.conn.commit()
                                 self.refresh_dropdown()
 
-            # Schedule the next update
-            self.after(1000, self.get_data)
+        # Schedule the next update
+        self.after(1000, self.get_data)
 
     # Function to refresh the dropdown menu with updated data
     def refresh_dropdown(self):
@@ -141,6 +150,11 @@ class LiveTest(ctk.CTkToplevel):
             activate_scrollbars=True
         )
         self.screen.grid(row=1, column=1, padx=10, sticky="new")
+        
+        # Add a graph to the UI
+        self.figure, self.ax = plt.subplots(figsize=(6, 4))
+        self.canvas = FigureCanvasTkAgg(self.figure, self)
+        self.canvas.get_tk_widget().grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="new")
 
     def update_screen(self, choice):
         # Extract battery_id from the choice (assuming format: "Battery <id> - ...")
@@ -158,16 +172,26 @@ class LiveTest(ctk.CTkToplevel):
             else:
                 self.screen.delete("1.0", "end")
                 self.screen.insert("1.0", f"Battery {battery_id} details not found.")
+            # Check if the battery has historical data
+            if battery_id in self.battery_history:
+                self.ax.clear()
+                self.ax.plot(self.battery_history[battery_id], label=f"Battery {battery_id} Voltage",)
+                self.ax.set_title(f"Battery {battery_id} Voltage Evolution")
+                self.ax.set_xlabel("Time")
+                self.ax.set_ylabel("Voltage (V)")
+                self.ax.legend()
+                self.canvas.draw()
 
     def on_close(self):
-        """Close the database connection when the window is destroyed."""
+        # Close the database connection and kill graph window
+        plt.close(self.figure)
+        self.canvas.get_tk_widget().destroy()
         self.c.execute('DELETE FROM battery_table')
         self.conn.commit()
         self.c.execute('DROP TABLE IF EXISTS battery_table')
         self.conn.commit()
         self.conn.close()
         self.destroy()
-
 
 #  Debug Page
 class Debug(ctk.CTkToplevel):

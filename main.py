@@ -16,7 +16,7 @@ from serial.tools import list_ports
 # Initialize the main window
 root = ctk.CTk()
 root.title("EVR app")
-root.geometry("1920x1080")
+root.geometry("1920x1020")
 root.resizable(False, False)
 
 

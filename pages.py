@@ -204,6 +204,8 @@ class LiveTest(ctk.CTkToplevel):
 
     def on_close(self):
         # Close the database connection and kill graph window
+        if self.ser.is_open:
+            self.ser.close()
         plt.close(self.figure)
         self.canvas.get_tk_widget().destroy()
         self.c.execute('DELETE FROM battery_table')
@@ -219,6 +221,8 @@ class Debug(ctk.CTkToplevel):
         self.geometry("900x800")
         self.title("Debug Page")
         self.resizable(True, True)
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
 
 
 
@@ -371,3 +375,8 @@ class Debug(ctk.CTkToplevel):
         self.log_box1.delete("1.0", "end")
         self.log_box2.delete("1.0", "end")
         self.log_box3.delete("1.0", "end")
+    
+    def on_close(self):
+        if self.ser.is_open:
+            self.ser.close()
+        self.destroy()

@@ -86,7 +86,6 @@ class LiveTest(ctk.CTkToplevel):
                                 voltage, state = message_part.split(";")
                                 voltage = voltage.strip()  # Extract voltage
                                 state = state.strip()      # Extract state (e.g., Charging or Discharging)
-
                                 # Update battery voltage history
                                 if id not in self.battery_history:
                                     self.battery_history[id] = []
@@ -356,6 +355,8 @@ class Debug(ctk.CTkToplevel):
     # Function to start the serial communication
     def start(self):
         self.is_running = True
+        self.ser.reset_input_buffer()  # Clears the input buffer
+        self.ser.reset_output_buffer()  # Clears the output buffer
         self.update_textbox()
         #self.text_button3.configure(state="disabled")
         self.text_button1.configure(state="disabled")

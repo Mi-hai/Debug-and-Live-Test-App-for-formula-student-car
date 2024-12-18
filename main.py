@@ -7,7 +7,7 @@ sys.dont_write_bytecode = True
 # Importing the necessary modules
 import customtkinter as ctk
 from pages import Debug, LiveTest  # Importing page classes
-from PIL import Image
+from PIL import Image, ImageTk
 import os
 import serial
 from serial.tools import list_ports
@@ -25,11 +25,9 @@ root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
 root.grid_columnconfigure(2, weight=1)
 
-
 # Set up the appearance and theme for the GUI
 ctk.set_appearance_mode('dark')
 ctk.set_default_color_theme("blue")
-
 
 # Background Image for the GUI
 # Set the path for the assets folder based on the runtime environment
@@ -40,12 +38,26 @@ else:
     # Running as a script
     assets_path = os.path.join(os.path.dirname(__file__), "assets")
 image_path = os.path.join(assets_path, "logo.jpeg")
-my_image = ctk.CTkImage(dark_image=Image.open(image_path), size=(900, 700))
-image_label = ctk.CTkLabel(root, image=my_image, text="")
-image_label.grid(row=0,column=0,columnspan=3,rowspan=3)
-image_label.lower()
+background_image = Image.open(image_path)
+background_photo = ImageTk.PhotoImage(background_image)
 
+# Create a canvas and set the background image
+canvas = ctk.CTkCanvas(root, width=900, height=700)
+canvas.grid(row=0, column=0, rowspan=4, columnspan=3, sticky="nsew")
+canvas = ctk.CTkCanvas(root, width=900, height=700)
+canvas.grid(row=0, column=0, rowspan=5, columnspan=3, sticky="nsew")
 
+# Function to resize the background image
+def resize_image(event):
+    new_width = event.width
+    new_height = event.height
+    resized_image = background_image.resize((new_width, new_height))
+    background_photo = ImageTk.PhotoImage(resized_image)
+    canvas.create_image(0, 0, anchor="nw", image=background_photo)
+    canvas.image = background_photo  # Keep a reference to the image to prevent garbage collection
+
+# Bind the resize event to the function
+canvas.bind("<Configure>", resize_image)
 
 # Function to detect available serial ports
 def detect_serial_port(filter_keyword="ttyUSB"):
@@ -61,11 +73,17 @@ def detect_serial_port(filter_keyword="ttyUSB"):
 input = detect_serial_port()
 default_input = "/dev/ttyUSB0"
 
+#Function to refresh the port
+def refresh_port():
+    global input
+    input = detect_serial_port()
+    label1.configure(text=f"Detected Port: {input}")
+
 # Update the label to show the detected port
 label1 = ctk.CTkLabel(
     root, 
     text=f"Detected Port: {input}", 
-    font=("Arial", 15), 
+    font=("Arial", 13), 
     text_color="white", 
     bg_color="#363a3d"
 )
@@ -91,9 +109,8 @@ text_button_debug.grid(row=3,column=0,pady=50)
 text_button_live_test = ctk.CTkButton(root, text="Live Test", command=lambda: LiveTest(input, default_input,filter_file=path1), border_width=3, border_color="black", width=200, height=70)
 text_button_live_test.grid(row=3,column=2,pady=50)
 
-
-
-
+text_button_refresh = ctk.CTkButton(root, text="Port Refresh", command=refresh_port, border_width=3, border_color="black", width=100, height=30)
+text_button_refresh.grid(row=3,column=1,pady=50, sticky="s")
 
 
 # Run the Tkinter main loop

@@ -99,7 +99,7 @@ class LiveTest(ctk.CTkToplevel):
                                     battery_voltage = excluded.battery_voltage,
                                     battery_state = excluded.battery_state
                             ''', (id, voltage, state))
-                                print(f"ID: {id}, Voltage: {voltage}, State: {state}")
+                                #print(f"ID: {id}, Voltage: {voltage}, State: {state}")
                                 self.conn.commit()
                                 self.refresh_dropdown()
                         if id == self.current_battery_id:
@@ -333,7 +333,7 @@ class Debug(ctk.CTkToplevel):
                 id_part = raw_value[0]  # Extract everything before the first colon (ID)
                 message_part = raw_value[1:].strip()  # Extract the part after the colon (message)
                 # Check if the ID is in the filter criteria
-                print(ord(id_part))
+                #print(ord(id_part))
                 for i in range(len(index)):
                     if ord(id_part) == int(index[i]):
                         # Route to the appropriate log box (you can modify this logic as needed)

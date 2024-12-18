@@ -16,15 +16,34 @@ from serial.tools import list_ports
 # Initialize the main window
 root = ctk.CTk()
 root.title("EVR app")
-root.geometry("1920x1020")
-root.resizable(False, False)
-
+root.minsize(900,700)
+root.resizable(True,True)
+root.grid_rowconfigure(1, weight=1)
+root.grid_rowconfigure(2, weight=1)
+root.grid_rowconfigure(3, weight=1)
+root.grid_columnconfigure(0, weight=1)
+root.grid_columnconfigure(1, weight=1)
+root.grid_columnconfigure(2, weight=1)
 
 
 # Set up the appearance and theme for the GUI
 ctk.set_appearance_mode('dark')
 ctk.set_default_color_theme("blue")
 
+
+# Background Image for the GUI
+# Set the path for the assets folder based on the runtime environment
+if hasattr(sys, "_MEIPASS"):
+    # Running as a bundled app
+    assets_path = os.path.join(sys._MEIPASS, "assets")
+else:
+    # Running as a script
+    assets_path = os.path.join(os.path.dirname(__file__), "assets")
+image_path = os.path.join(assets_path, "logo.jpeg")
+my_image = ctk.CTkImage(dark_image=Image.open(image_path), size=(900, 700))
+image_label = ctk.CTkLabel(root, image=my_image, text="")
+image_label.grid(row=0,column=0,columnspan=3,rowspan=3)
+image_label.lower()
 
 
 
@@ -50,7 +69,7 @@ label1 = ctk.CTkLabel(
     text_color="white", 
     bg_color="#363a3d"
 )
-label1.place(x=800, y=750)
+label1.grid(row=3,column=1,pady=20)
 
 
 
@@ -67,26 +86,13 @@ path1 = os.path.join(assets_path, "Filter.txt")
 
 # Buttons to open secondary pages
 text_button_debug = ctk.CTkButton(root, text="Debug Page", command=lambda: Debug(input, default_input,filter_file=path1), border_width=3, border_color="black", width=200, height=70)
-text_button_debug.place(x=400, y=550)
+text_button_debug.grid(row=3,column=0,pady=50)
 
 text_button_live_test = ctk.CTkButton(root, text="Live Test", command=lambda: LiveTest(input, default_input,filter_file=path1), border_width=3, border_color="black", width=200, height=70)
-text_button_live_test.place(x=1235, y=550)
+text_button_live_test.grid(row=3,column=2,pady=50)
 
 
 
-# Background Image for the GUI
-# Set the path for the assets folder based on the runtime environment
-if hasattr(sys, "_MEIPASS"):
-    # Running as a bundled app
-    assets_path = os.path.join(sys._MEIPASS, "assets")
-else:
-    # Running as a script
-    assets_path = os.path.join(os.path.dirname(__file__), "assets")
-image_path = os.path.join(assets_path, "logo.jpeg")
-my_image = ctk.CTkImage(dark_image=Image.open(image_path), size=(1920, 1000))
-image_label = ctk.CTkLabel(root, image=my_image, text="")
-image_label.place(x=0, y=-40, relwidth=1, relheight=1)
-image_label.lower()
 
 
 

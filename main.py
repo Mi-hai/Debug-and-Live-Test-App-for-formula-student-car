@@ -28,22 +28,24 @@ ctk.set_default_color_theme("blue")
 
 
 
-
 # Function to detect available serial ports
-def detect_serial_port():
+def detect_serial_port(filter_keyword="ttyUSB"):
     ports = list(list_ports.comports())
     for port in ports:
+        # Check if the filter_keyword matches the device name or description
+        if filter_keyword is None or (filter_keyword in port.device or filter_keyword in port.description):
             return port.device
+    return port.device
     return None
 
 # Detect serial port or use default
-input = detect_serial_port() or "/dev/ttyUSB0"
+input = detect_serial_port()
 default_input = "/dev/ttyUSB0"
 
 # Update the label to show the detected port
 label1 = ctk.CTkLabel(
     root, 
-    text=f"Detected Port: {input}\nSearch in /dev folder if incorrect", 
+    text=f"Detected Port: {input}", 
     font=("Arial", 15), 
     text_color="white", 
     bg_color="#363a3d"

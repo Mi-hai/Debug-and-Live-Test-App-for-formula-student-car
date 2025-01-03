@@ -8,6 +8,8 @@ import serial
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from datetime import datetime
+
 buffer = []  # Store buffer globally
 index = []  # Store index globally
 
@@ -65,7 +67,7 @@ class LiveTest(ctk.CTkToplevel):
         except FileNotFoundError:
             print(f"Filter file '{file_path}' not found.")
             return set()
-
+        
     # Function to get data from the serial port and insert into the database
     def get_data(self):
         raw_value = self.ser.readline().decode('utf-8')
@@ -79,35 +81,53 @@ class LiveTest(ctk.CTkToplevel):
                 message_part = message_part.strip()
                 # Check if the ID is in the filter criteria
                 #print(ord(id_part))
-                for i in range(len(index)):
-                    if ord(id_part) in range(1, 5):
-                        if ";" in message_part:
-                                # Split the message part on ';' to separate voltage and state
-                                voltage, state = message_part.split(";")
-                                voltage = voltage.strip()  # Extract voltage
-                                state = state.strip()      # Extract state (e.g., Charging or Discharging)
-                                # Update battery voltage history
-                                if id not in self.battery_history:
-                                    self.battery_history[id] = []
-                                self.battery_history[id].append(float(voltage))
+                if ord(id_part) in range(1, 5):
+                    if ";" in message_part:
+                            # Split the message part on ';' to separate voltage and state
+                            voltage, state = message_part.split(";")
+                            voltage = voltage.strip()  # Extract voltage
+                            state = state.strip()      # Extract state (e.g., Charging or Discharging)
+                                # Check for abnormal voltage
+                            if float(voltage) < 1 or float(voltage) > 15:  # Example thresholds
+                                error_message = f"Anomaly detected for Battery {id}: Voltage {voltage}V is out of range."
+                                print(error_message)
+                                self.send_warning(error_message)
+                            # Update battery voltage history
+                            if id not in self.battery_history:
+                                self.battery_history[id] = []
+                            self.battery_history[id].append(float(voltage))
 
-                                # Insert data into the database
-                                self.c.execute('''
-                                INSERT INTO battery_table (battery_id, battery_voltage, battery_state)
-                                VALUES (?, ?, ?)
-                                ON CONFLICT(battery_id) DO UPDATE SET 
-                                    battery_voltage = excluded.battery_voltage,
-                                    battery_state = excluded.battery_state
-                            ''', (id, voltage, state))
-                                #print(f"ID: {id}, Voltage: {voltage}, State: {state}")
-                                self.conn.commit()
-                                self.refresh_dropdown()
-                        if id == self.current_battery_id:
-                             self.refresh_graph()
+                            # Insert data into the database
+                            self.c.execute('''
+                            INSERT INTO battery_table (battery_id, battery_voltage, battery_state)
+                            VALUES (?, ?, ?)
+                            ON CONFLICT(battery_id) DO UPDATE SET 
+                                battery_voltage = excluded.battery_voltage,
+                                battery_state = excluded.battery_state
+                        ''', (id, voltage, state))
+                            #print(f"ID: {id}, Voltage: {voltage}, State: {state}")
+                            self.conn.commit()
+                            self.refresh_dropdown()
+                    if id == self.current_battery_id:
+                            self.refresh_graph()
 
 
         # Schedule the next update
         self.after(1000, self.get_data)
+
+    def send_warning(self, error_message):
+        #Text to be written in the file
+        body = f"{error_message}\nTimestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        
+        # Log the warning to a text file
+        log_file = "warning_log.txt"
+        try:
+            with open(log_file, "a") as file:
+                file.write(f"{body}\n\n")
+            print(f"Warning logged to {log_file}.")
+        except Exception as e:
+            print(f"Failed to write to log file: {e}")
+
 
     # Function to refresh the dropdown menu with updated data
     def refresh_dropdown(self):
@@ -334,18 +354,17 @@ class Debug(ctk.CTkToplevel):
                 message_part = raw_value[1:].strip()  # Extract the part after the colon (message)
                 # Check if the ID is in the filter criteria
                 #print(ord(id_part))
-                for i in range(len(index)):
-                    if ord(id_part) == int(index[i]):
-                        # Route to the appropriate log box (you can modify this logic as needed)
-                        if ord(id_part) in range(1, 10) :
-                            self.log_box1.insert("1.0",message_part+"\n")
-                        elif ord(id_part) in range(10, 20):
-                            self.log_box2.insert("1.0",message_part+"\n")
-                        elif ord(id_part) in range(20, 128):
-                            self.log_box3.insert("1.0",message_part+"\n")
-                        else:
-                            # Log for other filtered IDs if required
-                            self.log_box2.insert("1.0", f"ID {id_part}: {message_part}\n")
+                if ord(id_part) < 5:
+                    # Route to the appropriate log box (you can modify this logic as needed)
+                    if ord(id_part) in range(1, 10) :
+                        self.log_box1.insert("1.0",message_part+"\n")
+                    elif ord(id_part) in range(10, 20):
+                        self.log_box2.insert("1.0",message_part+"\n")
+                    elif ord(id_part) in range(20, 128):
+                        self.log_box3.insert("1.0",message_part+"\n")
+                    else:
+                        # Log for other filtered IDs if required
+                        self.log_box2.insert("1.0", f"ID {id_part}: {message_part}\n")
 
             # Schedule the next update
             self.after(1000, self.update_textbox)

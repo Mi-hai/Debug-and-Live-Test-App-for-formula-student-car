@@ -120,12 +120,13 @@ class LiveTest(ctk.CTkToplevel):
 
     def send_warning(self, error_message):
         # Email configuration
-        sender_email = "randomtesting@gmx.com"
-        receiver_email = "randomtesting@gmx.com"
+        sender_email = "randomtesting"
+        receiver_email = "randomtesting"
         smtp_server = "smtp.gmx.com"  # Example: Gmail SMTP
         smtp_port = 587
         email_password = os.getenv('EMAIL_PASSWORD')
-        
+
+            
         # Create the email
         subject = "Warning: Anomaly Detected"
         body = f"{error_message}\nTimestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"

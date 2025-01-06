@@ -56,7 +56,7 @@ class LiveTest(ctk.CTkToplevel):
         self.create_dropdown_and_screen()
         self.get_data()
 
-    #Create the filter criteria
+    #Create the filter criteria added with ChatGPT
     def load_filter_criteria(self, file_path):
         try:
             with open(file_path, "r") as file:
@@ -76,30 +76,31 @@ class LiveTest(ctk.CTkToplevel):
     def get_data(self):
         raw_value = self.ser.readline().decode('utf-8')
         if raw_value:
+
             # Parse the ID and message (assuming IDs are single-digit numbers or can be extended to more characters)
             id_part = raw_value[0]  # Extract everything before the first colon (ID)
             message_part1 = raw_value[1:].strip()  # Extract the part after the colon (message)
+
             if":" in message_part1:
                 id ,message_part= message_part1.split(":",1)
                 id =id.strip()
                 message_part = message_part.strip()
+
                 # Check if the ID is in the filter criteria
                 #print(ord(id_part))
                 if ord(id_part) in range(1, 5):
                     if ";" in message_part:
+                            
                             # Split the message part on ';' to separate voltage and state
                             voltage, state = message_part.split(";")
                             voltage = voltage.strip()  # Extract voltage
                             state = state.strip()      # Extract state (e.g., Charging or Discharging)
+
                                 # Check for abnormal voltage
                             if float(voltage) < 1 or float(voltage) > 15:  # Example thresholds
                                 error_message = f"Anomaly detected for Battery {id}: Voltage {voltage}V is out of range."
                                 print(error_message)
                                 self.send_warning(error_message)
-                            # Update battery voltage history
-                            if id not in self.battery_history:
-                                self.battery_history[id] = []
-                            self.battery_history[id].append(float(voltage))
 
                             # Insert data into the database
                             self.c.execute('''
@@ -108,9 +109,17 @@ class LiveTest(ctk.CTkToplevel):
                             ON CONFLICT(battery_id) DO UPDATE SET 
                                 battery_voltage = excluded.battery_voltage,
                                 battery_state = excluded.battery_state
-                        ''', (id, voltage, state))
+                                 ''', (id, voltage, state))
+                            
                             self.conn.commit()
-                            self.refresh_dropdown()
+
+                             # Update battery voltage history
+                            if id not in self.battery_history:
+                                self.battery_history[id] = []
+                                self.refresh_dropdown()
+
+                            self.battery_history[id].append(float(voltage))
+
                     if id == self.current_battery_id:
                             self.refresh_graph()
 
@@ -120,9 +129,9 @@ class LiveTest(ctk.CTkToplevel):
 
     def send_warning(self, error_message):
         # Email configuration
-        sender_email = "randomtesting"
-        receiver_email = "randomtesting"
-        smtp_server = "smtp.gmx.com"  # Example: Gmail SMTP
+        sender_email = ""
+        receiver_email = ""
+        smtp_server = "smtp.gmx.com"  # Example: Email SMTP
         smtp_port = 587
         email_password = os.getenv('EMAIL_PASSWORD')
 
@@ -153,18 +162,6 @@ class LiveTest(ctk.CTkToplevel):
             print(f"Warning logged to {log_file}.")
         except Exception as e:
             print(f"Failed to write to log file: {e}")
-
-    # Function to refresh the dropdown menu with updated data
-    def refresh_dropdown(self):
-        # Fetch updated data from the database
-        self.c.execute('SELECT battery_id, battery_voltage, battery_state FROM battery_table')
-        rows = self.c.fetchall()
-
-        # Format data for the dropdown
-        self.options = [f"Battery {row[0]}" for row in rows]  # Use only the battery_id for display
-
-        # Update the dropdown menu with the new options
-        self.dropdown.configure(values=self.options)
 
     # Function to create the dropdown menu and screen
     def create_dropdown_and_screen(self):
@@ -199,7 +196,7 @@ class LiveTest(ctk.CTkToplevel):
         )
         self.screen.grid(row=1, column=1, padx=10, sticky="new")
         
-        # Add a graph to the UI
+        # Add a graph to the UI added with ChatGPT
         self.figure, self.ax = plt.subplots(figsize=(6, 4))
         self.canvas = FigureCanvasTkAgg(self.figure, self)
         self.canvas.get_tk_widget().grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="new")
@@ -223,8 +220,20 @@ class LiveTest(ctk.CTkToplevel):
                 self.screen.delete("1.0", "end")
                 self.screen.insert("1.0", f"Battery {battery_id} details not found.")
 
+    # Function to refresh the dropdown menu with updated data
+    def refresh_dropdown(self):
+        # Fetch updated data from the database
+        self.c.execute('SELECT battery_id, battery_voltage, battery_state FROM battery_table')
+        rows = self.c.fetchall()
 
-    # Function to refresh the graph with updated data
+        # Format data for the dropdown
+        self.options = [f"Battery {row[0]}" for row in rows]  # Use only the battery_id for display
+
+        # Update the dropdown menu with the new options
+        self.dropdown.configure(values=self.options)
+
+
+    # Function to refresh the graph with updated data added with ChatGPT
     def refresh_graph(self):
         if self.current_battery_id in self.battery_history:
             self.ax.clear()

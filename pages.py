@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
+
+import os
 
 buffer = []  # Store buffer globally
 index = []  # Store index globally
@@ -105,7 +109,6 @@ class LiveTest(ctk.CTkToplevel):
                                 battery_voltage = excluded.battery_voltage,
                                 battery_state = excluded.battery_state
                         ''', (id, voltage, state))
-                            #print(f"ID: {id}, Voltage: {voltage}, State: {state}")
                             self.conn.commit()
                             self.refresh_dropdown()
                     if id == self.current_battery_id:
@@ -116,9 +119,31 @@ class LiveTest(ctk.CTkToplevel):
         self.after(1000, self.get_data)
 
     def send_warning(self, error_message):
-        #Text to be written in the file
-        body = f"{error_message}\nTimestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        # Email configuration
+        sender_email = "randomtesting@gmx.com"
+        receiver_email = "randomtesting@gmx.com"
+        smtp_server = "smtp.gmx.com"  # Example: Gmail SMTP
+        smtp_port = 587
+        email_password = os.getenv('EMAIL_PASSWORD')
         
+        # Create the email
+        subject = "Warning: Anomaly Detected"
+        body = f"{error_message}\nTimestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+
+        try:
+            # Send the email
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(sender_email, email_password)
+                server.sendmail(sender_email, receiver_email, msg.as_string())
+            print("Warning email sent successfully.")
+        except Exception as e:
+            print(f"Failed to send warning email: {e}")
+
         # Log the warning to a text file
         log_file = "warning_log.txt"
         try:
@@ -127,7 +152,6 @@ class LiveTest(ctk.CTkToplevel):
             print(f"Warning logged to {log_file}.")
         except Exception as e:
             print(f"Failed to write to log file: {e}")
-
 
     # Function to refresh the dropdown menu with updated data
     def refresh_dropdown(self):

@@ -88,7 +88,7 @@ class LiveTest(ctk.CTkToplevel):
 
                 # Check if the ID is in the filter criteria
                 #print(ord(id_part))
-                if ord(id_part) in range(1, 5):
+                if ord(id_part) in range(1, 6):
                     if ";" in message_part:
                             
                             # Split the message part on ';' to separate voltage and state
@@ -129,8 +129,8 @@ class LiveTest(ctk.CTkToplevel):
 
     def send_warning(self, error_message):
         # Email configuration
-        sender_email = ""
-        receiver_email = ""
+        sender_email = "randomtesting@gmx.com"
+        receiver_email = "randomtesting@gmx.com"
         smtp_server = "smtp.gmx.com"  # Example: Email SMTP
         smtp_port = 587
         email_password = os.getenv('EMAIL_PASSWORD')
@@ -267,6 +267,7 @@ class LiveTest(ctk.CTkToplevel):
         self.conn.commit()
         self.conn.close()
         self.destroy()
+
 #  Debug Page
 class Debug(ctk.CTkToplevel):
     def __init__(self, input, default_input, filter_file, *args, **kwargs):
@@ -387,19 +388,13 @@ class Debug(ctk.CTkToplevel):
                 id_part = raw_value[0]  # Extract everything before the first colon (ID)
                 message_part = raw_value[1:].strip()  # Extract the part after the colon (message)
                 # Check if the ID is in the filter criteria
-                #print(ord(id_part))
-                if ord(id_part) < 5:
-                    # Route to the appropriate log box (you can modify this logic as needed)
-                    if ord(id_part) in range(1, 10) :
-                        self.log_box1.insert("1.0",message_part+"\n")
-                    elif ord(id_part) in range(10, 20):
-                        self.log_box2.insert("1.0",message_part+"\n")
-                    elif ord(id_part) in range(20, 128):
-                        self.log_box3.insert("1.0",message_part+"\n")
-                    else:
-                        # Log for other filtered IDs if required
-                        self.log_box2.insert("1.0", f"ID {id_part}: {message_part}\n")
-
+                # Route to the appropriate log box (you can modify this logic as needed)
+                if ord(id_part) in range(6, 10) :
+                    self.log_box1.insert("1.0",message_part+"\n")
+                elif ord(id_part) in range(10, 20):
+                    self.log_box2.insert("1.0",message_part+"\n")
+                elif ord(id_part) in range(20, 128):
+                    self.log_box3.insert("1.0",message_part+"\n")
             # Schedule the next update
             self.after(1000, self.update_textbox)
 

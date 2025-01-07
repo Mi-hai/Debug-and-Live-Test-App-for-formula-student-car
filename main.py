@@ -29,7 +29,7 @@ root.grid_columnconfigure(2, weight=1)
 ctk.set_appearance_mode('dark')
 ctk.set_default_color_theme("blue")
 
-# Background Image for the GUI
+# Background Image for the GUI added with ChatGPT
 # Set the path for the assets folder based on the runtime environment
 if hasattr(sys, "_MEIPASS"):
     # Running as a bundled app
@@ -47,7 +47,7 @@ canvas.grid(row=0, column=0, rowspan=4, columnspan=3, sticky="nsew")
 canvas = ctk.CTkCanvas(root, width=900, height=700)
 canvas.grid(row=0, column=0, rowspan=5, columnspan=3, sticky="nsew")
 
-# Function to resize the background image
+# Function to resize the background image added with ChatGPT
 def resize_image(event):
     new_width = event.width
     new_height = event.height
@@ -91,7 +91,7 @@ label1.grid(row=3,column=1,pady=20)
 
 
 
-# Set the path for the Filter file based on the runtime environment
+# Set the path for the Filter file based on the runtime environment added with ChatGPT
 if hasattr(sys, "_MEIPASS"):
     # Running as a bundled app
     assets_path = os.path.join(sys._MEIPASS)

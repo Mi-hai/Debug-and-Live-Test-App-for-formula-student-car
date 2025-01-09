@@ -126,12 +126,11 @@ class LiveTest(ctk.CTkToplevel):
 
         # Schedule the next update
         self.after(1000, self.get_data)
-
     def send_warning(self, error_message):
         # Email configuration
-        sender_email = "randomtesting@gmx.com"
-        receiver_email = "randomtesting@gmx.com"
-        smtp_server = "smtp.gmx.com"  # Example: Email SMTP
+        sender_email = "<insert email>"
+        receiver_email = "<insert email>"
+        smtp_server = "smtp.<smtp`>.com"  # Example: Email SMTP
         smtp_port = 587
         email_password = os.getenv('EMAIL_PASSWORD')
 
@@ -202,7 +201,7 @@ class LiveTest(ctk.CTkToplevel):
         self.canvas.get_tk_widget().grid(row=2, column=0, columnspan=2, padx=10, pady=10, sticky="new")
 
     def update_screen(self, choice):
-        # Extract battery_id from the choice (assuming format: "Battery <id> - ...")
+        # Extract battery_id from the choice
         if choice.startswith("Battery"):
             battery_id = choice.split()[1]
             self.current_battery_id = battery_id

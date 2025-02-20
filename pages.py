@@ -17,6 +17,7 @@ import os
 buffer = []  # Store buffer globally
 index = []  # Store index globally
 
+# Live Test Page
 class LiveTest(ctk.CTkToplevel):
     def __init__(self, input, default_input, filter_file, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -75,6 +76,7 @@ class LiveTest(ctk.CTkToplevel):
     # Function to get data from the serial port and insert into the database
     def get_data(self):
         raw_value = self.ser.readline().decode('utf-8')
+        global index
         if raw_value:
 
             # Parse the ID and message (assuming IDs are single-digit numbers or can be extended to more characters)
@@ -87,7 +89,6 @@ class LiveTest(ctk.CTkToplevel):
                 message_part = message_part.strip()
 
                 # Check if the ID is in the filter criteria
-                #print(ord(id_part))
                 if ord(id_part) in range(1, 6):
                     if ";" in message_part:
                             
@@ -109,11 +110,11 @@ class LiveTest(ctk.CTkToplevel):
                             ON CONFLICT(battery_id) DO UPDATE SET 
                                 battery_voltage = excluded.battery_voltage,
                                 battery_state = excluded.battery_state
-                                 ''', (id, voltage, state))
+                                ''', (id, voltage, state))
                             
                             self.conn.commit()
 
-                             # Update battery voltage history
+                            # Update battery voltage history
                             if id not in self.battery_history:
                                 self.battery_history[id] = []
                                 self.refresh_dropdown()
@@ -128,9 +129,9 @@ class LiveTest(ctk.CTkToplevel):
         self.after(1000, self.get_data)
     def send_warning(self, error_message):
         # Email configuration
-        sender_email = "<insert email>"
-        receiver_email = "<insert email>"
-        smtp_server = "smtp.<smtp`>.com"  # Example: Email SMTP
+        sender_email = "randomtesting@gmx.com"
+        receiver_email = "randomtesting@gmx.com"
+        smtp_server = "smtp.gmx.com"  # Example: Email SMTP
         smtp_port = 587
         email_password = os.getenv('EMAIL_PASSWORD')
 
@@ -375,27 +376,76 @@ class Debug(ctk.CTkToplevel):
         self.text_button4.grid(row=5,column=1, pady=10, ipadx=10)
 
 
-
+    header=0
+    bufferdata=[]
     # Function to update the text box
     def update_textbox(self):
-        global index
+        global header
+        global bufferdata
+        ok=1
         if self.is_running:
-            # Read and decode the incoming data from serial
-            raw_value = self.ser.readline().decode('utf-8')
-            if raw_value:
-                # Parse the ID and message (assuming IDs are single-digit numbers or can be extended to more characters)
-                id_part = raw_value[0]  # Extract everything before the first colon (ID)
-                message_part = raw_value[1:].strip()  # Extract the part after the colon (message)
-                # Check if the ID is in the filter criteria
-                # Route to the appropriate log box (you can modify this logic as needed)
-                if ord(id_part) in range(6, 10) :
-                    self.log_box1.insert("1.0",message_part+"\n")
-                elif ord(id_part) in range(10, 20):
-                    self.log_box2.insert("1.0",message_part+"\n")
-                elif ord(id_part) in range(20, 128):
-                    self.log_box3.insert("1.0",message_part+"\n")
-            # Schedule the next update
-            self.after(1000, self.update_textbox)
+            if self.ser.in_waiting:
+                data = self.ser.read(self.ser.in_waiting)  # Read all available bytes
+                self.bufferdata+=data
+                while(ok):
+
+                    if len(self.bufferdata)>0:
+
+                        if self.header==0:
+                            self.header=self.bufferdata.pop(0)
+                        print(self.header,"<-------------------")
+                        if self.header==10: #Senzor Temperatura
+
+
+                            if len(self.bufferdata)>=4:
+                                #printare celor 4 seturi de date scoate a 
+                                mesaj=[]
+                                print(self.bufferdata)
+                                for i in range(4):
+                                    print("test")
+                                    mesaj.append(self.bufferdata.pop(0))
+                                celula=0
+                                valoare=0
+                                celula=mesaj[0]
+                                valoare=float(mesaj[1]*256+mesaj[2])/(10**mesaj[3])
+                                
+                                print(mesaj)
+                                self.log_box1.insert("1.0",f"Celula: {celula} are temperatura {valoare}" + "\n")
+                                self.header=0
+                            else:
+                                ok=0
+
+                        elif self.header==11:
+
+                            if len(self.bufferdata)>=5:
+
+                                #printare celor 5 seturi de date scoate b
+                                mesaj=[]
+                                for i in range(5):
+                                    mesaj.append(self.bufferdata.pop(0))
+                                celula=0
+                                valoare=0
+                                celula=mesaj[0]*256+mesaj[1]
+                                valoare=float(mesaj[2]*256+mesaj[3])/(10**mesaj[4])
+                                self.log_box2.insert("1.0",f"Celula: {celula} are voltajul {valoare}" + "\n")
+                                self.header=0
+                            else:
+                                ok=0
+                        else:
+                            ok=0
+                            self.bufferdata=[]
+                            self.header=0
+                    else:
+                        ok=0
+                        print("Aici")
+                        self.bufferdata=[]
+                        self.header=0
+                #bits = ' '.join(format(byte, '08b') for byte in data)
+                #print(bits)
+                #self.log_box1.insert("1.0", bits + "\n")
+
+        # Schedule the next update
+        self.after(1, self.update_textbox)
 
 
 

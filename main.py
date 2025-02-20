@@ -11,7 +11,10 @@ from PIL import Image, ImageTk
 import os
 import serial
 from serial.tools import list_ports
+import threading
+import time
 
+run=True
 
 # Initialize the main window
 root = ctk.CTk()
@@ -112,6 +115,16 @@ text_button_live_test.grid(row=3,column=2,pady=50)
 text_button_refresh = ctk.CTkButton(root, text="Port Refresh", command=refresh_port, border_width=3, border_color="black", width=100, height=30)
 text_button_refresh.grid(row=3,column=1,pady=50, sticky="s")
 
+def test():
+    global run
+    while(run):
+        time.sleep(1)
+
+t1=threading.Thread(target=test)
+t1.start()
+
 
 # Run the Tkinter main loop
 root.mainloop()
+run=False
+t1.join()

@@ -4,7 +4,7 @@ sys.dont_write_bytecode = True
 
 import customtkinter as ctk
 import serial
-import time
+import numpy as np
 import os
 
 #  Debug Page
@@ -19,7 +19,7 @@ class Debug(ctk.CTkFrame):
         self.log_box1 = ctk.CTkTextbox(
             self,
             width=300, height=600,
-            font=("Arial", 16), text_color="white",
+            font=("Arial", 14), text_color="white",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
         self.log_box1.grid(row=0, column=0, padx=20, pady=30, sticky="nsew",rowspan=2)
@@ -29,7 +29,7 @@ class Debug(ctk.CTkFrame):
         self.log_box2 = ctk.CTkTextbox(
             self,
             width=300, height=600,
-            font=("Arial", 16), text_color="white",
+            font=("Arial", 14), text_color="white",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
         self.log_box2.grid(row=0, column=1, padx=20, pady=30, sticky="nsew",rowspan=2)
@@ -56,13 +56,14 @@ class Debug(ctk.CTkFrame):
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
         self.log_box4.grid(row=0, column=3, padx=60, pady=30, sticky="new")
-        self.log_box8=ctk.CTkTextbox(
+
+        self.log_box5=ctk.CTkTextbox(
             self,
             width=350, height=300,
             font=("Arial", 16), text_color="white",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
-        self.log_box8.grid(row=1, column=3, padx=60, pady=20, sticky="nsew")
+        self.log_box5.grid(row=1, column=3, padx=60, pady=20, sticky="nsew")
         # --------------------------------------------------------------------------------------
 
 
@@ -102,14 +103,14 @@ class Debug(ctk.CTkFrame):
     accel1 = 9999999
     accel2 = 9999999
     frana = 9999999
-    Error = 0
     timp=0
     errtemp=9
     errbms=9
     errpedals=9
     err7seg=9
     errproc=9
-    temp=[]
+    temp=np.zeros(128)
+    bmsv=np.zeros(600)
 
     # Function to update the text box
     def update_textbox(self):
@@ -121,7 +122,6 @@ class Debug(ctk.CTkFrame):
         global accel1
         global accel2
         global frana
-        global Error
         global timp
         global errtemp
         global errbms
@@ -129,10 +129,8 @@ class Debug(ctk.CTkFrame):
         global err7seg
         global errproc
         global temp
+        global bmsv
         ok = 1
-        while len(self.temp) <= 128:
-            self.temp.append(0)  # Inițializează cu 0 sau altă valoare implicită
-
 
         if self.is_running:
             if self.ser.in_waiting:
@@ -171,10 +169,11 @@ class Debug(ctk.CTkFrame):
                                 valoare = 0
                                 celula = mesaj[0] * 256 + mesaj[1]
                                 valoare = float(mesaj[2] * 256 + mesaj[3]) / (10 ** mesaj[4])
+                                self.bmsv[celula]=valoare
                                 if valoare<self.lowest_BMS_V:
                                     self.lowest_BMS_V=valoare
                                     self.update_text()
-                                self.log_box2.insert("1.0", f"Cell: {celula} Voltage: {self.lowest_BMS_V}" + "\n")
+                                self.update_bmsv()
                                 self.header = 0
                             else:
                                 ok = 0
@@ -326,7 +325,6 @@ class Debug(ctk.CTkFrame):
         global accel1
         global accel2
         global frana
-        global Error
         global timp
         self.log_box4.delete("1.0", "end")
         self.log_box4.insert("end", f"Lowest Temp: {self.lowest_temp}" + "\n"+ "\n"+ f"Lowest BMS V: {self.lowest_BMS_V}" + "\n"+ "\n"+ f"Lowest BMS A: {self.lowest_BMS_A}" + "\n"+ "\n"+ f"Accel(%): P1: {self.accel1} - P2: {self.accel2}" + "\n"+ "\n"+ f"Brake(%): {self.frana}" + "\n"+ "\n"+ f"Time: {self.timp}" + "\n")
@@ -339,49 +337,55 @@ class Debug(ctk.CTkFrame):
         global errpedals
         global err7seg
         global errproc
-        self.log_box8.delete("1.0", "end")
+        self.log_box5.delete("1.0", "end")
         if self.errtemp == 0:
-            self.log_box8.insert("end", "Temperature: too HIGH" + "\n"+"\n")
+            self.log_box5.insert("end", "Temperature: too HIGH" + "\n"+"\n")
         else:
-            self.log_box8.insert("end", "Temperature: Normal" + "\n"+ "\n")
+            self.log_box5.insert("end", "Temperature: Normal" + "\n"+ "\n")
 
-        if self.errbms == 0:
-            self.log_box8.insert("end", "BMS: not responding" + "\n"+ "\n")
 
-        elif self.errbms == 1:
-            self.log_box8.insert("end", "BMS: low voltage" + "\n"+ "\n")
+        if self.errbms != 9:
+            if self.errbms == 0:
+                self.log_box5.insert("end", "BMS: not responding" + "\n"+ "\n")
 
-        elif self.errbms == 2:
-            self.log_box8.insert("end", "BMS: high consumption" + "\n"+ "\n")
+            if self.errbms == 1:
+                self.log_box5.insert("end", "BMS: low voltage" + "\n"+ "\n")
+
+            if self.errbms == 2:
+                self.log_box5.insert("end", "BMS: high consumption" + "\n"+ "\n")
         else:
-            self.log_box8.insert("end", "BMS: Normal" + "\n"+ "\n")
+            self.log_box5.insert("end", "BMS: Normal" + "\n"+ "\n")
 
         if self.errpedals == 0:
-            self.log_box8.insert("end", "Pedals: different outputs" + "\n"+ "\n")
+            self.log_box5.insert("end", "Pedals: different outputs" + "\n"+ "\n")
 
-        elif self.errpedals == 1:
-            self.log_box8.insert("end", "Pedals: shorted" + "\n"+ "\n")
 
-        elif self.errpedals == 2:
-            self.log_box8.insert("end", "Pedals: no output" + "\n"+ "\n")
+        if self.errpedals != 9:
+            if self.errpedals == 1:
+                self.log_box5.insert("end", "Pedals: shorted" + "\n"+ "\n")
+
+            if self.errpedals == 2:
+                self.log_box5.insert("end", "Pedals: no output" + "\n"+ "\n")
         else:
-            self.log_box8.insert("end", "Pedals: Normal" + "\n"+ "\n")
+            self.log_box5.insert("end", "Pedals: Normal" + "\n"+ "\n")
 
-        if self.err7seg == 0:
-            self.log_box8.insert("end", "7Seg: bus is broken" + "\n"+ "\n")
 
-        elif self.err7seg == 1:
-            self.log_box8.insert("end", "7Seg: number is too large" + "\n"+ "\n")
+        if self.err7seg != 9:
+            if self.err7seg == 0:
+                self.log_box5.insert("end", "7Seg: bus is broken" + "\n"+ "\n")
 
-        elif self.err7seg == 2:
-            self.log_box8.insert("end", "7Seg: wrong segment" + "\n"+ "\n")
+            if self.err7seg == 1:
+                self.log_box5.insert("end", "7Seg: number is too large" + "\n"+ "\n")
+
+            if self.err7seg == 2:
+                self.log_box5.insert("end", "7Seg: wrong segment" + "\n"+ "\n")
         else:
-            self.log_box8.insert("end", "7Seg: Normal" + "\n"+ "\n")
+            self.log_box5.insert("end", "7Seg: Normal" + "\n"+ "\n")
 
         if self.errproc == 0:
-            self.log_box8.insert("end", "Processor: reset" + "\n"+ "\n")
+            self.log_box5.insert("end", "Processor: reset" + "\n"+ "\n")
         else:
-            self.log_box8.insert("end", "Processor: Normal" + "\n"+ "\n")
+            self.log_box5.insert("end", "Processor: Normal" + "\n"+ "\n")
 
     #Function to update temp textbox
     def update_temp(self):
@@ -389,8 +393,16 @@ class Debug(ctk.CTkFrame):
         scroll_position=self.log_box1.yview()
         self.log_box1.delete("1.0", "end")
         for i in range(0, 128,2):
-            self.log_box1.insert("end", f"Cell:{i} T:{self.temp[i]}                Cell:{i+1} T:{self.temp[i+1]}" + "\n")
+            self.log_box1.insert("end", f"Cell:{i} T:{self.temp[i]}              Cell:{i+1} T:{self.temp[i+1]}" + "\n")
         self.log_box1.yview_moveto(scroll_position[0])
+
+    def update_bmsv(self):
+        global bmsv
+        scroll_position=self.log_box2.yview()
+        self.log_box2.delete("1.0", "end")
+        for i in range (0, 600,2):
+            self.log_box2.insert("end", f"Cell:{i} V:{self.bmsv[i]}              Cell:{i+1} V:{self.bmsv[i+1]}" + "\n")
+        self.log_box2.yview_moveto(scroll_position[0])
 
     # Function to start the serial communication
     def start(self):
@@ -412,7 +424,34 @@ class Debug(ctk.CTkFrame):
         self.log_box2.delete("1.0", "end")
         self.log_box3.delete("1.0", "end")
         self.log_box4.delete("1.0", "end")
-        self.log_box8.delete("1.0", "end")
+        self.log_box5.delete("1.0", "end")
+        global header
+        global bufferdata
+        global lowest_temp
+        global lowest_BMS_V
+        global lowest_BMS_A
+        global accel1
+        global accel2
+        global frana
+        global timp
+        global errtemp
+        global errbms
+        global errpedals
+        global err7seg
+        global errproc
+        self.bufferdata = []
+        self.lowest_temp = 9999999
+        self.lowest_BMS_V = 9999999
+        self.lowest_BMS_A = 9999999
+        self.accel1 = 9999999
+        self.accel2 = 9999999
+        self.frana = 9999999
+        self.timp=0
+        self.errtemp=9
+        self.errbms=9
+        self.errpedals=9
+        self.err7seg=9
+        self.errproc=9
 
     def on_close(self):
         if self.ser.is_open:

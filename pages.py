@@ -4,7 +4,7 @@ sys.dont_write_bytecode = True
 
 import customtkinter as ctk
 import serial
-
+import time
 import os
 
 #  Debug Page
@@ -18,72 +18,51 @@ class Debug(ctk.CTkFrame):
         #==========================================================================
         self.log_box1 = ctk.CTkTextbox(
             self,
-            width=300, height=300,
+            width=300, height=600,
             font=("Arial", 16), text_color="white",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
-        self.log_box1.grid(row=0, column=0, padx=20, pady=30, sticky="new")
-
-        self.log_box5 = ctk.CTkTextbox(
-            self,
-            width=300, height=300,
-            font=("Arial", 16), text_color="white",
-            fg_color="#242424", border_width=1, border_color="black",
-            activate_scrollbars=True)
-        self.log_box5.grid(row=1, column=0, padx=20,pady=20, sticky="sew")
+        self.log_box1.grid(row=0, column=0, padx=20, pady=30, sticky="nsew",rowspan=2)
         #==========================================================================
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         self.log_box2 = ctk.CTkTextbox(
             self,
-            width=300, height=300,
+            width=300, height=600,
             font=("Arial", 16), text_color="white",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
-        self.log_box2.grid(row=0, column=1, padx=20, pady=30, sticky="new")
+        self.log_box2.grid(row=0, column=1, padx=20, pady=30, sticky="nsew",rowspan=2)
 
-        self.log_box6 = ctk.CTkTextbox(
-            self,
-            width=300, height=300,
-            font=("Arial", 16), text_color="white",
-            fg_color="#242424", border_width=1, border_color="black",
-            activate_scrollbars=True)
-        self.log_box6.grid(row=1, column=2, padx=20,pady=20, sticky="sew")
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
         #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         self.log_box3 = ctk.CTkTextbox(
             self,
-            width=300, height=300,
+            width=300, height=600,
             font=("Arial", 16), text_color="white",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
-        self.log_box3.grid(row=0, column=2, padx=20, pady=30, sticky="new")
+        self.log_box3.grid(row=0, column=2, padx=20, pady=30, sticky="nsew",rowspan=2)
 
-        self.log_box7 = ctk.CTkTextbox(
-            self,
-            width=300, height=300,
-            font=("Arial", 16), text_color="white",
-            fg_color="#242424", border_width=1, border_color="black",
-            activate_scrollbars=True)
-        self.log_box7.grid(row=1, column=1, padx=20, pady=20, sticky="sew")
+
         #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
         # --------------------------------------------------------------------------------------
         self.log_box4=ctk.CTkTextbox(
             self,
-            width=300, height=300,
+            width=350, height=300,
             font=("Arial", 16), text_color="white",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
         self.log_box4.grid(row=0, column=3, padx=60, pady=30, sticky="new")
         self.log_box8=ctk.CTkTextbox(
             self,
-            width=300, height=300,
+            width=350, height=300,
             font=("Arial", 16), text_color="white",
             fg_color="#242424", border_width=1, border_color="black",
             activate_scrollbars=True)
-        self.log_box8.grid(row=1, column=3, padx=60, pady=20, sticky="sew")
+        self.log_box8.grid(row=1, column=3, padx=60, pady=20, sticky="nsew")
         # --------------------------------------------------------------------------------------
 
 
@@ -125,6 +104,12 @@ class Debug(ctk.CTkFrame):
     frana = 9999999
     Error = 0
     timp=0
+    errtemp=9
+    errbms=9
+    errpedals=9
+    err7seg=9
+    errproc=9
+    temp=[]
 
     # Function to update the text box
     def update_textbox(self):
@@ -138,7 +123,17 @@ class Debug(ctk.CTkFrame):
         global frana
         global Error
         global timp
+        global errtemp
+        global errbms
+        global errpedals
+        global err7seg
+        global errproc
+        global temp
         ok = 1
+        while len(self.temp) <= 128:
+            self.temp.append(0)  # Inițializează cu 0 sau altă valoare implicită
+
+
         if self.is_running:
             if self.ser.in_waiting:
                 data = self.ser.read(self.ser.in_waiting)  # Read all available bytes
@@ -158,11 +153,11 @@ class Debug(ctk.CTkFrame):
                                 valoare = 0
                                 celula = mesaj[0]
                                 valoare = float(mesaj[1] * 256 + mesaj[2]) / (10 ** mesaj[3])
-                                
+                                self.temp[celula]=valoare
                                 if valoare<self.lowest_temp:
                                     self.lowest_temp=valoare
                                     self.update_text()
-                                self.log_box1.insert("1.0", f"Cell: {celula} Temp: {self.lowest_temp}" + "\n")
+                                self.update_temp()
                                 self.header = 0
                             else:
                                 ok = 0
@@ -195,7 +190,6 @@ class Debug(ctk.CTkFrame):
                                     self.lowest_BMS_A=valoare
                                     self.update_text()
                                     self.bufferdata = []
-                                self.log_box3.insert("1.0", f"BMS A: {self.lowest_BMS_A}" + "\n")
                                 self.header = 0
                             else:
                                 ok = 0
@@ -213,7 +207,6 @@ class Debug(ctk.CTkFrame):
                                 self.accel2=valoare1
                                 self.update_text()
                                 self.bufferdata = []
-                                self.log_box5.insert("1.0", f"Pedal1: {self.accel1} - Pedal2: {self.accel2}" + "\n")
                                 self.header = 0
                             else:
                                 ok = 0
@@ -228,24 +221,23 @@ class Debug(ctk.CTkFrame):
                                 self.frana=valoare
                                 self.update_text()
                                 self.bufferdata = []
-                                self.log_box6.insert("1.0", f"Brake: {self.frana}" + "\n")
                                 self.header = 0
                             else:
                                 ok = 0
                         #Modul timp
                         elif self.header == 17:
-                            if len(self.bufferdata) >= 4:
+                            if len(self.bufferdata) >= 6:
                                 mesaj = []
-                                for i in range(4):
+                                for i in range(6):
                                     mesaj.append(self.bufferdata.pop(0))
                                 modul=0
                                 valoare = 0
                                 modul=mesaj[0]
-                                valoare = float(mesaj[1] * 256 + mesaj[2]) / (10 ** mesaj[3])
+                                valoare = float(mesaj[1] * 256**3 + mesaj[2] * 256**2 + mesaj[3] * 256 + mesaj[4])/(10**mesaj[5])
                                 self.timp=valoare
                                 self.update_text()
                                 self.bufferdata = []
-                                self.log_box7.insert("1.0", f"Time: {self.timp}" + "\n")
+                                self.log_box3.insert("1.0", f"Time: {self.timp}" + "\n")
                                 self.header = 0
                             else:
                                 ok = 0
@@ -263,52 +255,53 @@ class Debug(ctk.CTkFrame):
                                 if modul==10:
                                     if valoare == 0:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "Temperature too HIGH 🌡️" + "\n")
+                                        self.errtemp=0
                                         self.header = 0
                                 if modul==11 or modul ==12:
                                     if valoare == 0:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "BMS not responding" + "\n")
+                                        self.errbms=0
                                         self.header = 0
                                     elif valoare == 1:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "BMS low voltage" + "\n")
+                                        self.errbms=1
                                         self.header = 0
                                     elif valoare == 2:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "BMS high consumption" + "\n")
+                                        self.errbms=2
                                         self.header = 0
                                 if modul==13 or modul==14:
                                     if valoare == 0:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "Pedals different outputs" + "\n")
+                                        self.errpedals=0
                                         self.header = 0
                                     elif valoare == 1:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "Pedals shorted ⚡" + "\n")
+                                        self.errpedals=1
                                         self.header = 0
                                     elif valoare == 2:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", f"Pedals no output 💀" + "\n")
+                                        self.errpedals=2
                                         self.header = 0
                                 if modul==15:
                                     if valoare == 0:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "7Seg bus is broken 💔" + "\n")
+                                        self.err7seg=0
                                         self.header = 0
                                     elif valoare == 1:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "7Seg number is too large" + "\n")
+                                        self.err7seg=1
                                         self.header = 0
                                     elif valoare == 2:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "7Seg wrong segment" + "\n")
+                                        self.err7seg=2
                                         self.header = 0
                                 if modul==16:
                                     if valoare==0:
                                         self.bufferdata = []
-                                        self.log_box8.insert("1.0", "Processor reset 🧠" + "\n")
+                                        self.errproc=0
                                         self.header = 0
+                                self.update_error()
                                 self.header = 0
                                 self.bufferdata = []
                             else:
@@ -336,9 +329,68 @@ class Debug(ctk.CTkFrame):
         global Error
         global timp
         self.log_box4.delete("1.0", "end")
-        self.log_box4.insert("1.0", f"Lowest Temp: {self.lowest_temp}" + "\n"+ f"Lowest BMS V: {self.lowest_BMS_V}" + "\n"+ f"Lowest BMS A: {self.lowest_BMS_A}" + "\n"+ f"Accel(%): P1: {self.accel1} - P2: {self.accel2}" + "\n"+ f"Brake(%): {self.frana}" + "\n"+ f"Time: {self.timp}" + "\n")
-    
+        self.log_box4.insert("end", f"Lowest Temp: {self.lowest_temp}" + "\n"+ "\n"+ f"Lowest BMS V: {self.lowest_BMS_V}" + "\n"+ "\n"+ f"Lowest BMS A: {self.lowest_BMS_A}" + "\n"+ "\n"+ f"Accel(%): P1: {self.accel1} - P2: {self.accel2}" + "\n"+ "\n"+ f"Brake(%): {self.frana}" + "\n"+ "\n"+ f"Time: {self.timp}" + "\n")
+        
+        
+    #Function to update the error textbox
+    def update_error(self):
+        global errtemp
+        global errbms
+        global errpedals
+        global err7seg
+        global errproc
+        self.log_box8.delete("1.0", "end")
+        if self.errtemp == 0:
+            self.log_box8.insert("end", "Temperature: too HIGH" + "\n"+"\n")
+        else:
+            self.log_box8.insert("end", "Temperature: Normal" + "\n"+ "\n")
 
+        if self.errbms == 0:
+            self.log_box8.insert("end", "BMS: not responding" + "\n"+ "\n")
+
+        elif self.errbms == 1:
+            self.log_box8.insert("end", "BMS: low voltage" + "\n"+ "\n")
+
+        elif self.errbms == 2:
+            self.log_box8.insert("end", "BMS: high consumption" + "\n"+ "\n")
+        else:
+            self.log_box8.insert("end", "BMS: Normal" + "\n"+ "\n")
+
+        if self.errpedals == 0:
+            self.log_box8.insert("end", "Pedals: different outputs" + "\n"+ "\n")
+
+        elif self.errpedals == 1:
+            self.log_box8.insert("end", "Pedals: shorted" + "\n"+ "\n")
+
+        elif self.errpedals == 2:
+            self.log_box8.insert("end", "Pedals: no output" + "\n"+ "\n")
+        else:
+            self.log_box8.insert("end", "Pedals: Normal" + "\n"+ "\n")
+
+        if self.err7seg == 0:
+            self.log_box8.insert("end", "7Seg: bus is broken" + "\n"+ "\n")
+
+        elif self.err7seg == 1:
+            self.log_box8.insert("end", "7Seg: number is too large" + "\n"+ "\n")
+
+        elif self.err7seg == 2:
+            self.log_box8.insert("end", "7Seg: wrong segment" + "\n"+ "\n")
+        else:
+            self.log_box8.insert("end", "7Seg: Normal" + "\n"+ "\n")
+
+        if self.errproc == 0:
+            self.log_box8.insert("end", "Processor: reset" + "\n"+ "\n")
+        else:
+            self.log_box8.insert("end", "Processor: Normal" + "\n"+ "\n")
+
+    #Function to update temp textbox
+    def update_temp(self):
+        global temp
+        scroll_position=self.log_box1.yview()
+        self.log_box1.delete("1.0", "end")
+        for i in range(0, 128,2):
+            self.log_box1.insert("end", f"Cell:{i} T:{self.temp[i]}                Cell:{i+1} T:{self.temp[i+1]}" + "\n")
+        self.log_box1.yview_moveto(scroll_position[0])
 
     # Function to start the serial communication
     def start(self):
@@ -360,9 +412,6 @@ class Debug(ctk.CTkFrame):
         self.log_box2.delete("1.0", "end")
         self.log_box3.delete("1.0", "end")
         self.log_box4.delete("1.0", "end")
-        self.log_box5.delete("1.0", "end")
-        self.log_box6.delete("1.0", "end")
-        self.log_box7.delete("1.0", "end")
         self.log_box8.delete("1.0", "end")
 
     def on_close(self):

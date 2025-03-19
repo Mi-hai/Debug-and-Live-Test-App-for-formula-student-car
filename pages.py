@@ -89,11 +89,12 @@ class Debug(ctk.CTkFrame):
     accel2 = 9999999
     frana = 9999999
     timp=0
-    errtemp=9
-    errbms=9
-    errpedals=9
-    err7seg=9
-    errproc=9
+    errtemp=["","","","","","","",""]
+    errbms=["","","","","","","",""]
+    errpedals=["","","","","","","",""]
+    errpedalsf=["","","","","","","",""]
+    err7seg=["","","","","","","",""]
+    errproc=["","","","","","","",""]
     temp=np.zeros(128)
     bmsv=np.zeros(600)
 
@@ -131,6 +132,7 @@ class Debug(ctk.CTkFrame):
         global errproc
         global temp
         global bmsv
+        global errpedalsf
         ok = 1
 
         if self.is_running:
@@ -250,60 +252,61 @@ class Debug(ctk.CTkFrame):
                                 modul=0
                                 valoare = 0
                                 modul=mesaj[0]
-                                if mesaj[1]<=2:
-                                    valoare = mesaj[1]
+                                valoare = bin(mesaj[1])[2:].zfill(8)
+                                valoare1=int(bin(mesaj[1])[2:].zfill(8))
                                 if modul==10:
-                                    if valoare == 0:
-                                        self.bufferdata = []
-                                        self.errtemp=0
-                                        self.header = 0
-                                if modul==11 or modul ==12:
-                                    if valoare == 0:
-                                        self.bufferdata = []
-                                        self.errbms=0
-                                        self.header = 0
-                                    elif valoare == 1:
-                                        self.bufferdata = []
-                                        self.errbms=1
-                                        self.header = 0
-                                    elif valoare == 2:
-                                        self.bufferdata = []
-                                        self.errbms=2
-                                        self.header = 0
-                                if modul==13 or modul==14:
-                                    if valoare == 0:
-                                        self.bufferdata = []
-                                        self.errpedals=0
-                                        self.header = 0
-                                    elif valoare == 1:
-                                        self.bufferdata = []
-                                        self.errpedals=1
-                                        self.header = 0
-                                    elif valoare == 2:
-                                        self.bufferdata = []
-                                        self.errpedals=2
-                                        self.header = 0
+                                    for i in range(len(valoare)):
+                                        if valoare1%10 ==1:
+                                            if i==0:
+                                                self.errtemp[i]="Temperature: too HIGH" 
+                                            valoare1=valoare1//10                      
+                                if modul==11 or modul==12:
+                                    for i in range(len(valoare)):
+                                        if valoare1%10 ==1:
+                                            if i==0:
+                                                self.errbms[i]="BMS: No Response"
+                                            if i==1:
+                                                self.errbms[i]="BMS: Low Voltage"
+                                            if i==2:
+                                                self.errbms[i]="BMS: High Consumption"
+                                            valoare1=valoare1//10
+                                if modul==13:
+                                    for i in range(len(valoare)):
+                                        if valoare1%10==1:
+                                            if i==0:
+                                                self.errpedals[i]="Pedals: Different OutPut"
+                                            if i==1:
+                                                self.errpedals[i]="Pedals: Shorted"
+                                            if i==2:
+                                                self.errpedals[i]="Pedals: No OutPut"
+                                            valoare1=valoare1//10
+                                if modul==14:
+                                    for i in range(len(valoare)):
+                                        if valoare1%10==1:
+                                            if i==0:
+                                                self.errpedalsf[i]="Break: Shorted"
+                                            if i==1:
+                                                self.errpedalsf[i]="Break: No OutPut"
+                                            valoare1=valoare1//10
                                 if modul==15:
-                                    if valoare == 0:
-                                        self.bufferdata = []
-                                        self.err7seg=0
-                                        self.header = 0
-                                    elif valoare == 1:
-                                        self.bufferdata = []
-                                        self.err7seg=1
-                                        self.header = 0
-                                    elif valoare == 2:
-                                        self.bufferdata = []
-                                        self.err7seg=2
-                                        self.header = 0
+                                    for i in range(len(valoare)):
+                                        if valoare1%10==1:
+                                            if i==0:
+                                                self.err7seg[i]="7seg: Bus is Broken"
+                                            if i==1:
+                                                self.err7seg[i]="7seg: Number too large"
+                                            if i==2:
+                                                self.err7seg[i]="7seg: Wrong Segment"
+                                            valoare1=valoare1//10
                                 if modul==16:
-                                    if valoare==0:
-                                        self.bufferdata = []
-                                        self.errproc=0
-                                        self.header = 0
+                                    for i in range(len(valoare)):
+                                        if valoare1%10==1:
+                                            if i==0:
+                                                self.errproc[i]="Processor: Reset"
+                                            valoare1=valoare1//10
                                 self.update_error()
-                                self.header = 0
                                 self.bufferdata = []
+                                self.header = 0
                             else:
                                 ok = 0
                         else:
@@ -338,54 +341,87 @@ class Debug(ctk.CTkFrame):
         global errpedals
         global err7seg
         global errproc
-        self.log_box5.delete("1.0", "end")
-        if self.errtemp == 0:
-            self.log_box5.insert("end", "Temperature: too HIGH" + "\n"+"\n")
+        global errpedalsf
+        ok1=0
+        ok2=0
+        ok3=0
+        ok4=0
+        # Clear the previous error messages
+        self.log_box5.delete("1.0", "end")  # Clear the content of the text box (log)
+
+        # Initialize the error messages list to keep track of what to display
+        error_messages = []
+
+        # Check and display the errors based on the current state of the error variables
+
+        # Temperature Error (check all bits)
+        if self.errtemp[0] == "Temperature: too HIGH":
+            error_messages.append("Temperature: too HIGH\n")
         else:
-            self.log_box5.insert("end", "Temperature: Normal" + "\n"+ "\n")
+            error_messages.append("Temperature: Normal\n")
 
+        # BMS Errors (check all bits)
+        if self.errbms[0] == "BMS: No Response":
+            error_messages.append("BMS: No Response\n")
+            ok1=1
+        if self.errbms[1] == "BMS: Low Voltage":
+            error_messages.append("BMS: Low Voltage\n")
+            ok1=1
+        if self.errbms[2] == "BMS: High Consumption":
+            error_messages.append("BMS: High Consumption\n")
+            ok1=1
+        
+        if ok1==0:  # If none is active
+            error_messages.append("BMS: Normal\n")
 
-        if self.errbms != 9:
-            if self.errbms == 0:
-                self.log_box5.insert("end", "BMS: not responding" + "\n"+ "\n")
+        # Pedals Errors (check all bits)
+        if self.errpedals[0] == "Pedals: Different Output":
+            error_messages.append("Pedals: Different Output\n")
+            ok2=1
+        if self.errpedals[1] == "Pedals: Shorted":
+            error_messages.append("Pedals: Shorted\n")
+            ok2=1
+        if self.errpedals[2] == "Pedals: No Output":
+            error_messages.append("Pedals: No Output\n")
+            ok2=1
+        if ok2==0:  # If none is active
+            error_messages.append("Pedals: Normal\n")
 
-            if self.errbms == 1:
-                self.log_box5.insert("end", "BMS: low voltage" + "\n"+ "\n")
+        # Brake Pedals Errors (check all bits)
+        if self.errpedalsf[0] == "Break: Shorted":
+            error_messages.append("Break: Shorted\n")
+            ok3=1
+        if self.errpedalsf[1] == "Break: No Output":
+            error_messages.append("Break: No Output\n")
+            ok3=1
+        if ok3==0:  # If none is active
+            error_messages.append("Break: Normal\n")
 
-            if self.errbms == 2:
-                self.log_box5.insert("end", "BMS: high consumption" + "\n"+ "\n")
+        # 7Seg Display Errors (check all bits)
+        if self.err7seg[0] == "7seg: Bus is Broken":
+            error_messages.append("7seg: Bus is Broken\n")
+            ok4=1
+        if self.err7seg[1] == "7seg: Number too large":
+            error_messages.append("7seg: Number too large\n")
+            ok4=1
+        if self.err7seg[2] == "7seg: Wrong Segment":
+            error_messages.append("7seg: Wrong Segment\n")
+            ok4=1
+        if ok4==0:  # If none is active
+            error_messages.append("7seg: Normal\n")
+
+        # Processor Error
+        if self.errproc[0] == "Processor: Reset":
+            error_messages.append("Processor: Reset\n")
         else:
-            self.log_box5.insert("end", "BMS: Normal" + "\n"+ "\n")
+            error_messages.append("Processor: Normal\n")
 
-        if self.errpedals == 0:
-            self.log_box5.insert("end", "Pedals: different outputs" + "\n"+ "\n")
+        # Insert all errors into the log
+        self.log_box5.insert("end", "".join(error_messages))
+        
 
 
-        if self.errpedals != 9:
-            if self.errpedals == 1:
-                self.log_box5.insert("end", "Pedals: shorted" + "\n"+ "\n")
 
-            if self.errpedals == 2:
-                self.log_box5.insert("end", "Pedals: no output" + "\n"+ "\n")
-        else:
-            self.log_box5.insert("end", "Pedals: Normal" + "\n"+ "\n")
-
-        if self.err7seg != 9:
-            if self.err7seg == 0:
-                self.log_box5.insert("end", "7Seg: bus is broken" + "\n"+ "\n")
-
-            if self.err7seg == 1:
-                self.log_box5.insert("end", "7Seg: number is too large" + "\n"+ "\n")
-
-            if self.err7seg == 2:
-                self.log_box5.insert("end", "7Seg: wrong segment" + "\n"+ "\n")
-        else:
-            self.log_box5.insert("end", "7Seg: Normal" + "\n"+ "\n")
-
-        if self.errproc == 0:
-            self.log_box5.insert("end", "Processor: reset" + "\n"+ "\n")
-        else:
-            self.log_box5.insert("end", "Processor: Normal" + "\n"+ "\n")
 
     #Function to update temp textbox
     def update_temp(self):
@@ -445,11 +481,6 @@ class Debug(ctk.CTkFrame):
         global accel2
         global frana
         global timp
-        global errtemp
-        global errbms
-        global errpedals
-        global err7seg
-        global errproc
         self.bufferdata = []
         self.lowest_temp = 9999999
         self.lowest_BMS_V = 9999999
@@ -458,11 +489,8 @@ class Debug(ctk.CTkFrame):
         self.accel2 = 9999999
         self.frana = 9999999
         self.timp=0
-        self.errtemp=9
-        self.errbms=9
-        self.errpedals=9
-        self.err7seg=9
-        self.errproc=9
+
+
 
     # Function to close
     def on_close(self):

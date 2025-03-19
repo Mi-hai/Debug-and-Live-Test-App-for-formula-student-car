@@ -6,6 +6,8 @@ import customtkinter as ctk
 import serial
 import numpy as np
 import os
+from tabulate import tabulate
+import threading
 
 #  Debug Page
 class Debug(ctk.CTkFrame):
@@ -76,24 +78,7 @@ class Debug(ctk.CTkFrame):
         # Sets the first state of the port as off and setups the buttons
         self.is_running = False
         self.setup_buttons()
-
-
-
-    # Function to setup the buttons
-    def setup_buttons(self):
-        # Start Button
-        self.text_button1 = ctk.CTkButton(self, text="Start", command=self.start, border_width=3, border_color="black",height=50)
-        self.text_button1.grid(row=2, column=0, pady=10, ipadx=10, sticky="ew")
-
-        # Stop Button
-        self.text_button2 = ctk.CTkButton(self, text="Stop", command=self.stop, border_width=3, border_color="black",height=50)
-        self.text_button2.grid(row=2, column=1, pady=10, ipadx=10, sticky="ew")
-
-        # Clear log Button
-        self.text_button4 = ctk.CTkButton(self, text="Clear log", command=self.clear_logs, border_width=3, border_color="black",height=50)
-        self.text_button4.grid(row=2, column=2, pady=10, ipadx=10, sticky="ew")
-
-
+           
     # Variables
     header = 0
     bufferdata = []
@@ -111,6 +96,22 @@ class Debug(ctk.CTkFrame):
     errproc=9
     temp=np.zeros(128)
     bmsv=np.zeros(600)
+
+
+
+    # Function to setup the buttons
+    def setup_buttons(self):
+        # Start Button
+        self.text_button1 = ctk.CTkButton(self, text="Start", command=self.start, border_width=3, border_color="black",height=50)
+        self.text_button1.grid(row=2, column=0, pady=10, ipadx=10, sticky="ew")
+
+        # Stop Button
+        self.text_button2 = ctk.CTkButton(self, text="Stop", command=self.stop, border_width=3, border_color="black",height=50)
+        self.text_button2.grid(row=2, column=1, pady=10, ipadx=10, sticky="ew")
+
+        # Clear log Button
+        self.text_button4 = ctk.CTkButton(self, text="Clear log", command=self.clear_logs, border_width=3, border_color="black",height=50)
+        self.text_button4.grid(row=2, column=2, pady=10, ipadx=10, sticky="ew")
 
     # Function to update the text box
     def update_textbox(self):
@@ -369,7 +370,6 @@ class Debug(ctk.CTkFrame):
         else:
             self.log_box5.insert("end", "Pedals: Normal" + "\n"+ "\n")
 
-
         if self.err7seg != 9:
             if self.err7seg == 0:
                 self.log_box5.insert("end", "7Seg: bus is broken" + "\n"+ "\n")
@@ -390,18 +390,29 @@ class Debug(ctk.CTkFrame):
     #Function to update temp textbox
     def update_temp(self):
         global temp
-        scroll_position=self.log_box1.yview()
+        scroll_position = self.log_box1.yview()
+
+        table_data = []
+        for i in range(0, 128, 2):
+            table_data.append([f"Cell:{i:>3}", f"T:{self.temp[i]:05.2f}", f"Cell:{i+1:>3}", f"T:{self.temp[i+1]:05.2f}"])
+
+        formatted_text = tabulate(table_data, tablefmt="plain")
         self.log_box1.delete("1.0", "end")
-        for i in range(0, 128,2):
-            self.log_box1.insert("end", f"Cell:{i} T:{self.temp[i]}              Cell:{i+1} T:{self.temp[i+1]}" + "\n")
+        self.log_box1.insert("end", formatted_text + "\n")
         self.log_box1.yview_moveto(scroll_position[0])
 
+    #Function to update bmsv textbox
     def update_bmsv(self):
         global bmsv
-        scroll_position=self.log_box2.yview()
+        scroll_position = self.log_box2.yview()
+
+        table_data = []
+        for i in range(0, 600, 2):
+            table_data.append([f"Cell:{i:>3}", f"V:{self.bmsv[i]:6.2f}",f"Cell:{i+1:>3}", f"V:{self.bmsv[i+1]:6.2f}"])
+
+        formatted_text = tabulate(table_data, tablefmt="plain")
         self.log_box2.delete("1.0", "end")
-        for i in range (0, 600,2):
-            self.log_box2.insert("end", f"Cell:{i} V:{self.bmsv[i]}              Cell:{i+1} V:{self.bmsv[i+1]}" + "\n")
+        self.log_box2.insert("end", formatted_text + "\n")
         self.log_box2.yview_moveto(scroll_position[0])
 
     # Function to start the serial communication
@@ -453,6 +464,7 @@ class Debug(ctk.CTkFrame):
         self.err7seg=9
         self.errproc=9
 
+    # Function to close
     def on_close(self):
         if self.ser.is_open:
             self.ser.close()

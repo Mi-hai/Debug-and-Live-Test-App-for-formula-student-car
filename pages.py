@@ -259,7 +259,10 @@ class Debug(ctk.CTkFrame):
                                         if valoare1%10 ==1:
                                             if i==0:
                                                 self.errtemp[i]="Temperature: too HIGH" 
-                                            valoare1=valoare1//10                      
+                                            valoare1=valoare1//10      
+                                        else:
+                                            self.errtemp[i]="Temperature: Normal"
+                                            valoare1=valoare1//10                
                                 if modul==11 or modul==12:
                                     for i in range(len(valoare)):
                                         if valoare1%10 ==1:
@@ -269,6 +272,9 @@ class Debug(ctk.CTkFrame):
                                                 self.errbms[i]="BMS: Low Voltage"
                                             if i==2:
                                                 self.errbms[i]="BMS: High Consumption"
+                                            valoare1=valoare1//10
+                                        else:
+                                            self.errbms[i]="BMS: Normal"
                                             valoare1=valoare1//10
                                 if modul==13:
                                     for i in range(len(valoare)):
@@ -280,6 +286,9 @@ class Debug(ctk.CTkFrame):
                                             if i==2:
                                                 self.errpedals[i]="Pedals: No OutPut"
                                             valoare1=valoare1//10
+                                        else:
+                                            self.errpedals[i]="Pedals: Normal"
+                                            valoare1=valoare1//10
                                 if modul==14:
                                     for i in range(len(valoare)):
                                         if valoare1%10==1:
@@ -287,6 +296,9 @@ class Debug(ctk.CTkFrame):
                                                 self.errpedalsf[i]="Break: Shorted"
                                             if i==1:
                                                 self.errpedalsf[i]="Break: No OutPut"
+                                            valoare1=valoare1//10
+                                        else:
+                                            self.errpedalsf[i]="Break: Normal"
                                             valoare1=valoare1//10
                                 if modul==15:
                                     for i in range(len(valoare)):
@@ -298,15 +310,23 @@ class Debug(ctk.CTkFrame):
                                             if i==2:
                                                 self.err7seg[i]="7seg: Wrong Segment"
                                             valoare1=valoare1//10
+                                        else:
+                                            self.err7seg[i]="7seg: Normal"
+                                            valoare1=valoare1//10
                                 if modul==16:
                                     for i in range(len(valoare)):
                                         if valoare1%10==1:
                                             if i==0:
                                                 self.errproc[i]="Processor: Reset"
                                             valoare1=valoare1//10
+                                        else:
+                                            self.errproc[i]="Processor: Normal"
+                                            valoare1=valoare1//10
                                 self.update_error()
                                 self.bufferdata = []
                                 self.header = 0
+                                print(self.errbms)
+                                print(self.err7seg)
                             else:
                                 ok = 0
                         else:
@@ -417,7 +437,7 @@ class Debug(ctk.CTkFrame):
             error_messages.append("Processor: Normal\n")
 
         # Insert all errors into the log
-        self.log_box5.insert("end", "".join(error_messages))
+        self.log_box5.insert("end", "".join(error_messages),)
         
 
 

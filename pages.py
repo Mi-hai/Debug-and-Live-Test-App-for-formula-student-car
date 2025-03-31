@@ -137,11 +137,11 @@ class Debug(ctk.CTkFrame):
     
     def setup_buttons(self):
         # Start Button
-        self.text_button1 = ctk.CTkButton(self, text="Start", command=self.start, border_width=3, border_color="black",height=50)
+        self.text_button1 = ctk.CTkButton(self, text="Start", command=self.start, border_width=3, border_color="black",fg_color="green",hover_color="#2d6714",height=50)
         self.text_button1.grid(row=2, column=0, pady=10, ipadx=10, sticky="ew")
 
         # Stop Button
-        self.text_button2 = ctk.CTkButton(self, text="Stop", command=self.stop, border_width=3, border_color="black",height=50)
+        self.text_button2 = ctk.CTkButton(self, text="Stop", command=self.stop, border_width=3, border_color="black",fg_color="red",hover_color="#cc0909",height=50)
         self.text_button2.grid(row=2, column=1, pady=10, ipadx=10, sticky="ew")
 
         # Clear log Button

@@ -13,6 +13,7 @@ import serial
 from serial.tools import list_ports
 import threading
 import time
+import platform
 
 
 
@@ -74,7 +75,13 @@ def detect_serial_port(filter_keyword="ttyUSB"):
     return None
 
 # Detect serial port or use default
-input = detect_serial_port()
+try:
+    input = detect_serial_port()
+except:
+    if platform.system() == "Windows":
+        input = "COM1"
+    elif platform.system() == "Linux":
+        input = "/dev/ttyUSB0"
 default_input = "/dev/ttyUSB0"
 
 #Function to refresh the port

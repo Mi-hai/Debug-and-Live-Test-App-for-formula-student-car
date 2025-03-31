@@ -106,12 +106,12 @@ class Debug(ctk.CTkFrame):
         try:
             port=default_input if len(input) < 2 else input
             self.ser=serial.Serial(port,9600,timeout=1)
-        except serial.SerialException as e:
-            self.log_box1.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\n{input}")
-            self.log_box2.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\n{input}")
-            self.log_box3.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\n{input}")
-            self.log_box4.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\n{input}")
-            self.log_box5.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\n{input}")
+        except:
+            self.log_box1.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
+            self.log_box2.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
+            self.log_box3.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
+            self.log_box4.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
+            self.log_box5.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
             self.ser=None
 
     def setup_variables(self):
@@ -501,12 +501,12 @@ class Debug(ctk.CTkFrame):
         if self.ser and not self.ser.is_open:
             try:
                 self.ser.open()
-            except serial.SerialException as e:
-                self.log_box1.insert("1.0", f"Serial error: {e}\n")
-                self.log_box2.insert("1.0", f"Serial error: {e}\n")
-                self.log_box3.insert("1.0", f"Serial error: {e}\n")
-                self.log_box4.insert("1.0", f"Serial error: {e}\n")
-                self.log_box5.insert("1.0", f"Serial error: {e}\n")
+            except:
+                self.log_box1.insert("1.0", f"Serial error\n")
+                self.log_box2.insert("1.0", f"Serial error\n")
+                self.log_box3.insert("1.0", f"Serial error\n")
+                self.log_box4.insert("1.0", f"Serial error\n")
+                self.log_box5.insert("1.0", f"Serial error\n")
                 return
         self.is_running = True
         if self.ser:

@@ -20,8 +20,8 @@ import platform
 # Initialize the main window
 root = ctk.CTk()
 root.title("EVR app")
-root.minsize(1400,900)
-root.resizable(False, False)
+root.maxsize(1500,800)
+root.resizable(True,True)
 root.grid_rowconfigure(0, weight=1)
 root.grid_rowconfigure(1, weight=1)
 root.grid_rowconfigure(2, weight=1)
@@ -34,7 +34,7 @@ root.grid_columnconfigure(2, weight=1)
 ctk.set_appearance_mode('dark')
 ctk.set_default_color_theme("blue")
 
-# Background Image for the GUI added with ChatGPT
+# Background Image for the GUI
 # Set the path for the assets folder based on the runtime environment
 if hasattr(sys, "_MEIPASS"):
     # Running as a bundled app
@@ -49,10 +49,9 @@ background_photo = ImageTk.PhotoImage(background_image)
 # Create a canvas and set the background image
 canvas = ctk.CTkCanvas(root, width=900, height=700)
 canvas.grid(row=0, column=0, rowspan=4, columnspan=3, sticky="nsew")
-canvas = ctk.CTkCanvas(root, width=900, height=700)
-canvas.grid(row=0, column=0, rowspan=4, columnspan=3, sticky="nsew")
 
-# Function to resize the background image added with ChatGPT
+
+# Function to resize the background image
 def resize_image(event):
     new_width = event.width
     new_height = event.height

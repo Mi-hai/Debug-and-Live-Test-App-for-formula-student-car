@@ -16,8 +16,8 @@ import random
 class Debug(ctk.CTkFrame):
     def __init__(self, parent, input, default_input, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
-        self.grid(sticky="nsew",rowspan=5)
-
+        self.grid(sticky="nsew",rowspan=4,columnspan=3)
+        
         #Create the widgets
         self.create_widgets()
 
@@ -40,67 +40,72 @@ class Debug(ctk.CTkFrame):
     
     def create_widgets(self):
         """Function to create all widgets for temp, voltage, time, data summary and errors using CustomTk textboxes"""
+        
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=0) 
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(3, weight=1)
         #==========================================================================
-
         """Temperature"""
         self.log_box1 = ctk.CTkTextbox(
             self,
-            width=300, height=600,
-            font=("Arial", 14), text_color="white",
-            fg_color="#242424", border_width=1, border_color="black",
+            font=("Arial", 14), 
+            text_color="white",
+            fg_color="#242424", 
+            border_width=1, 
+            border_color="black",
             activate_scrollbars=True)
-        self.log_box1.grid(row=0, column=0, padx=20, pady=30, sticky="nsew",rowspan=2)
-
+        self.log_box1.grid(row=0, column=0, padx=20, pady=30, sticky="nsew", rowspan=2)
 
         #==========================================================================
-
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
         """Voltage"""
         self.log_box2 = ctk.CTkTextbox(
             self,
-            width=300, height=600,
-            font=("Arial", 14), text_color="white",
-            fg_color="#242424", border_width=1, border_color="black",
+            font=("Arial", 14), 
+            text_color="white",
+            fg_color="#242424", 
+            border_width=1, 
+            border_color="black",
             activate_scrollbars=True)
-        self.log_box2.grid(row=0, column=1, padx=20, pady=30, sticky="nsew",rowspan=2)
+        self.log_box2.grid(row=0, column=1, padx=20, pady=30, sticky="nsew", rowspan=2)
 
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-        #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+        #==========================================================================
         """Time"""
         self.log_box3 = ctk.CTkTextbox(
             self,
-            width=300, height=600,
-            font=("Arial", 16), text_color="white",
-            fg_color="#242424", border_width=1, border_color="black",
+            font=("Arial", 16), 
+            text_color="white",
+            fg_color="#242424", 
+            border_width=1, 
+            border_color="black",
             activate_scrollbars=True)
-        self.log_box3.grid(row=0, column=2, padx=20, pady=30, sticky="nsew",rowspan=2)
+        self.log_box3.grid(row=0, column=2, padx=20, pady=30, sticky="nsew", rowspan=2)
 
-
-        #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-        # --------------------------------------------------------------------------------------
+        #==========================================================================
         """Data summary"""
-        self.log_box4=ctk.CTkTextbox(
+        self.log_box4 = ctk.CTkTextbox(
             self,
-            width=350, height=300,
-            font=("Arial", 16), text_color="white",
-            fg_color="#242424", border_width=1, border_color="black",
+            font=("Arial", 16), 
+            text_color="white",
+            fg_color="#242424", 
+            border_width=1, 
+            border_color="black",
             activate_scrollbars=True)
-        self.log_box4.grid(row=0, column=3, padx=60, pady=30, sticky="new")
-
+        self.log_box4.grid(row=0, column=3, padx=20, pady=30, sticky="nsew")
 
         """Errors"""
-        self.log_box5=ctk.CTkTextbox(
+        self.log_box5 = ctk.CTkTextbox(
             self,
-            width=350, height=300,
-            font=("Arial", 16), text_color="white",
-            fg_color="#242424", border_width=1, border_color="black",
+            font=("Arial", 16), 
+            text_color="white",
+            fg_color="#242424", 
+            border_width=1, 
+            border_color="black",
             activate_scrollbars=True)
-        self.log_box5.grid(row=1, column=3, padx=60, pady=20, sticky="nsew")
-        # --------------------------------------------------------------------------------------
+        self.log_box5.grid(row=1, column=3, padx=20, pady=20, sticky="nsew")
 
     def serial(self,input,default_input):
         try:

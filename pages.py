@@ -17,7 +17,6 @@ class Debug(ctk.CTkFrame):
     def __init__(self, parent, input, default_input, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.grid(sticky="nsew",rowspan=4,columnspan=3)
-        
         #Create the widgets
         self.create_widgets()
 
@@ -107,16 +106,33 @@ class Debug(ctk.CTkFrame):
             activate_scrollbars=True)
         self.log_box5.grid(row=1, column=3, padx=20, pady=20, sticky="nsew")
 
+        self.log_box1.configure(state="disable")
+        self.log_box2.configure(state="disable")
+        self.log_box3.configure(state="disable")
+        self.log_box4.configure(state="disable")
+        self.log_box5.configure(state="disable")
+
+
     def serial(self,input,default_input):
         try:
             port=default_input if len(input) < 2 else input
             self.ser=serial.Serial(port,9600,timeout=1)
         except:
+            self.log_box1.configure(state="normal")
+            self.log_box2.configure(state="normal")
+            self.log_box3.configure(state="normal")
+            self.log_box4.configure(state="normal")
+            self.log_box5.configure(state="normal")
             self.log_box1.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
             self.log_box2.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
             self.log_box3.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
             self.log_box4.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
             self.log_box5.insert("1.0", f"Serial error\nCould not open port\nOr Permission Denied\nPort:{input}")
+            self.log_box1.configure(state="disable")
+            self.log_box2.configure(state="disable")
+            self.log_box3.configure(state="disable")
+            self.log_box4.configure(state="disable")
+            self.log_box5.configure(state="disable")
             self.ser=None
 
     def setup_variables(self):
@@ -172,11 +188,21 @@ class Debug(ctk.CTkFrame):
                         data = self.ser.read(self.ser.in_waiting)
                         self.data_queue.put(data)
                 except serial.SerialException as e:
+                    self.log_box1.configure(state="normal")
+                    self.log_box2.configure(state="normal")
+                    self.log_box3.configure(state="normal")
+                    self.log_box4.configure(state="normal")
+                    self.log_box5.configure(state="normal")
                     self.log_box1.insert("1.0", f"Serial error: {e}\n")
                     self.log_box2.insert("1.0", f"Serial error: {e}\n")
                     self.log_box3.insert("1.0", f"Serial error: {e}\n")
                     self.log_box4.insert("1.0", f"Serial error: {e}\n")
                     self.log_box5.insert("1.0", f"Serial error: {e}\n")
+                    self.log_box1.configure(state="disable")
+                    self.log_box2.configure(state="disable")
+                    self.log_box3.configure(state="disable")
+                    self.log_box4.configure(state="disable")
+                    self.log_box5.configure(state="disable")
                     self.is_running = False
             time.sleep(0.01)
     
@@ -191,134 +217,207 @@ class Debug(ctk.CTkFrame):
 
     def parse_buffer(self):
         """Separate the buffer data"""
-        while len(self.bufferdata)>0:
-            if self.header==0:
-                self.header=self.bufferdata.pop(0)
-        
-            #Temperature
-            if self.header==10 and len(self.bufferdata)>=4:
-                self.process_temp()
+        while len(self.bufferdata) > 0:
+            # Only get a new header if we don't have one already
+            if self.header == 0:
+                self.header = self.bufferdata.pop(0)
+            
+            try:
+                # Temperature (header 10, needs 5 bytes)
+                if self.header == 10:
+                    if len(self.bufferdata)<5:
+                        break
+                    self.process_temp()
+                    self.header = 0
+                    continue
 
-            #BMS Voltage
-            elif self.header==11 and len(self.bufferdata)>=5:
-                self.process_bmsv()
+                # BMS Voltage (header 11, needs 8 bytes)
+                elif self.header == 11:
+                    if len(self.bufferdata)<8:
+                        break
+                    self.process_bmsv()
+                    self.header = 0
+                    continue
 
-            #BMS Current
-            elif self.header==12 and len(self.bufferdata)>=5:
-                self.process_bmsa()
-            
-            #Accelerator pedal
-            elif self.header==13 and len(self.bufferdata)>=5:
-                self.process_acc()
-            
-            #Brake pedal
-            elif self.header==14 and len(self.bufferdata)>=3:
-                self.process_brake()
+                # BMS Current (header 12, needs 6 bytes)
+                elif self.header == 12:
+                    if len(self.bufferdata)<6:
+                        break
+                    self.process_bmsa()
+                    self.header = 0
+                    continue
+                
+                # Accelerator pedal (header 13, needs 6 bytes)
+                elif self.header == 13:
+                    if len(self.bufferdata)<6:
+                        break
+                    self.process_acc()
+                    self.header = 0  
+                    continue
+                
+                # Brake pedal (header 14, needs 4 bytes)
+                elif self.header == 14:
+                    if len(self.bufferdata)<4:
+                        break
+                    self.process_brake()
+                    self.header = 0
+                    continue
 
-            #Time module
-            elif self.header==17 and len(self.bufferdata)>=6:
-                self.process_time()
-            
-            #Errors
-            elif self.header==9 and len(self.bufferdata)>=2:
-                self.process_errors()
-            
-            else:
+                # Time module (header 17, needs 7 bytes)
+                elif self.header == 17:
+                    if len(self.bufferdata)<7:
+                        break
+                    self.process_time()
+                    self.header = 0
+                    continue
+                
+                # Errors (header 9, needs 3 bytes)
+                elif self.header == 9:
+                    if len(self.bufferdata)<3:
+                        break
+                    self.process_errors()
+                    self.header = 0
+                    continue
+                
+                # elif self.header == 18 and len(self.bufferdata) >= 
+                
+                else:
+                    # If we get here, we have a header but not enough data
+                    # for a complete message, so break and wait for more data
+                    break
+                    
+            except Exception as e:
+                print(f"Error processing message (header {self.header}): {e}")
+                # Clear the header to start fresh on next message
+                self.header = 0
                 break
-
+                
+            finally:
+                # Only reset header if we processed a complete message
+                # (this won't execute if we hit the 'break' above)
+                self.header = 0
+                
     def process_temp(self):
         """Process temperature data"""
         mesaj = []
-        for i in range(4):
+        for i in range(5):
             mesaj.append(self.bufferdata.pop(0))
-        celula=mesaj[0]
-        valoare=float(mesaj[1]*256+mesaj[2])/10**mesaj[3]
-        self.temp[celula]=valoare
-        if valoare<self.lowest_temp:
-            self.lowest_temp=valoare
-        self.update_temp()
-        self.update_text()
-        self.header = 0
+        if self.crc_verify(mesaj)==0:
+            celula=mesaj[0]
+            valoare=float(mesaj[1]*256+mesaj[2])/10**mesaj[3]
+            self.temp[celula]=valoare
+            if valoare<self.lowest_temp:
+                self.lowest_temp=valoare
+            self.update_temp()
+            self.update_text()
+            self.header = 0
+        else:
+            print("Error1")
     
     def process_bmsv(self):
         """Process BMS voltage data"""
         mesaj = []
-        for i in range(5):
+        
+        for i in range(8):
             mesaj.append(self.bufferdata.pop(0))
-        celula=mesaj[0]*256+mesaj[1]
-        valoare=float(mesaj[2]*256+mesaj[3])/10**mesaj[4]
-        self.bmsv[celula]=valoare
-        if valoare<self.lowest_BMS_V:
-            self.lowest_BMS_V=valoare
-        self.update_bmsv()
-        self.update_text()
-        self.header = 0
+        if self.crc_verify(mesaj)==0:
+            celula=mesaj[0]*256+mesaj[1]
+            valoare=float(mesaj[2]*256+mesaj[3])/10**mesaj[4]
+            self.bmsv[celula]=valoare
+            if valoare<self.lowest_BMS_V:
+                self.lowest_BMS_V=valoare
+            self.update_bmsv()
+            self.update_text()
+            self.header = 0
+        else:
+            print("Error2")
     
     def process_bmsa(self):
         """Process BMS current data"""
         mesaj = []
-        for i in range(5):
+        for i in range(6):
             mesaj.append(self.bufferdata.pop(0))
-        valoare = float(mesaj[0]*256+mesaj[1])/10**mesaj[2]
-        if valoare<self.lowest_BMS_A:
-            self.lowest_BMS_A = valoare
-        self.update_text()
-        self.header = 0
+        if self.crc_verify(mesaj)==0:
+            valoare = float(mesaj[0]*256+mesaj[1])/10**mesaj[2]
+            if valoare<self.lowest_BMS_A:
+                self.lowest_BMS_A = valoare
+            self.update_text()
+            self.header = 0
+        else:
+            print("Error3")
     
     def process_acc(self):
         """Process accelerator pedal data"""
         mesaj = []
-        for i in range(5):
+        for i in range(6):
             mesaj.append(self.bufferdata.pop(0))
-        self.accel1 = float(mesaj[0] * 256 + mesaj[1]) / (10 ** mesaj[4])
-        self.accel2 = float(mesaj[2] * 256 + mesaj[3]) / (10 ** mesaj[4])
-        self.update_text()
-        self.header = 0
+        if self.crc_verify(mesaj)==0:
+            self.accel1 = float(mesaj[0] * 256 + mesaj[1]) / (10 ** mesaj[4])
+            self.accel2 = float(mesaj[2] * 256 + mesaj[3]) / (10 ** mesaj[4])
+            self.update_text()
+            self.header = 0
+        else:
+            print("Error4")
     
     def process_brake(self):
         """Process brake pedal data"""
         mesaj = []
-        for i in range(3):
-            mesaj.append(self.bufferdata.pop(0))
-        self.frana = float(mesaj[0] * 256 + mesaj[1]) / (10 ** mesaj[2])
-        self.update_text()
-        self.header = 0
+        for i in range(4):
+            mesaj.append(self.bufferdata.pop(0))  
+        if self.crc_verify(mesaj)==0: 
+            self.frana = float(mesaj[0] * 256 + mesaj[1]) / (10 ** mesaj[2])
+            self.update_text()
+            self.header = 0
+        else:
+            print("Error5")
 
     def process_time(self):
         """Process time data"""
+        self.log_box3.configure(state="normal")
         mesaj = []
-        for i in range(6):
+        for i in range(7):
             mesaj.append(self.bufferdata.pop(0))
-        self.timp = float(mesaj[1] * 256**3 + mesaj[2] * 256**2 + mesaj[3] * 256 + mesaj[4])/(10**mesaj[5])
-        self.update_text()
-        self.log_box3.insert("1.0", f"Time: {self.timp}\n")
-        self.header = 0
-    
+        if self.crc_verify(mesaj)==0:
+            self.timp = float(mesaj[1] * 256**3 + mesaj[2] * 256**2 + mesaj[3] * 256 + mesaj[4])/(10**mesaj[5])
+            self.update_text()
+            self.log_box3.insert("1.0", f"Time: {self.timp}\n")
+            self.header = 0
+            self.log_box3.configure(state="disable")
+        else:
+            print("Error6")
+        
     def process_errors(self):
         """Process errors"""
         mesaj=[]
-        for i in range(2):
+        for i in range(3):
             mesaj.append(self.bufferdata.pop(0))
-        modul = mesaj[0]
-        valoare = bin(mesaj[1])[2:].zfill(8)
-        valoare1 = int(valoare)
+        if self.crc_verify(mesaj)==0:
+            modul = mesaj[0]
+            print(modul)
+            valoare = bin(mesaj[1])[2:].zfill(8)
+            valoare1 = int(valoare)
 
-        if modul == 10:  # Temperature errors
-            self.process_temp_errors(valoare1)
-        elif modul in (11, 12):  # BMS errors
-            self.process_bms_errors(valoare1)
-        elif modul == 13:  # Pedal errors
-            self.process_pedal_errors(valoare1)
-        elif modul == 14:  # Brake errors
-            self.process_brake_errors(valoare1)
-        elif modul == 15:  # 7seg errors
-            self.process_7seg_errors(valoare1)
-        elif modul == 16:  # Processor errors
-            self.process_proc_errors(valoare1)
+            if modul == 10:  # Temperature errors
+                self.process_temp_errors(valoare1)
+            elif modul in (11, 12):  # BMS errors
+                self.process_bms_errors(valoare1)
+            elif modul == 13:  # Pedal errors
+                self.process_pedal_errors(valoare1)
+            elif modul == 14:  # Brake errors
+                self.process_brake_errors(valoare1)
+            elif modul == 15:  # 7seg errors
+                self.process_7seg_errors(valoare1)
+            elif modul == 16:  # Processor errors
+                self.process_proc_errors(valoare1)
+            else:
+                print("Error: Unknown module")
 
-        self.update_error()
-        self.header = 0
-    
+            self.update_error()
+            self.header = 0
+        else:
+            print("Error7")
+
+
     def process_temp_errors(self, valoare1):
         """Temperature errors"""
         for i in range(8):
@@ -393,6 +492,7 @@ class Debug(ctk.CTkFrame):
     
     def update_text(self):
         """Updating the Summary data widget"""
+        self.log_box4.configure(state="normal")
         text=(f"Lowest Temp: {self.lowest_temp:.2f}\n\n"
               f"Lowest BMS V: {self.lowest_BMS_V:.2f}\n\n"
               f"Lowest BMS A: {self.lowest_BMS_A:.2f}\n\n"
@@ -402,9 +502,11 @@ class Debug(ctk.CTkFrame):
         )
         self.log_box4.delete("1.0","end")
         self.log_box4.insert("end",text)
+        self.log_box4.configure(state="disable")
 
     def update_error(self):
         """Update error widget"""
+        self.log_box5.configure(state="normal")
         error_messages = []
                 # Temperature errors
         if self.errtemp[0] == "Temperature: too HIGH":
@@ -473,11 +575,13 @@ class Debug(ctk.CTkFrame):
 
         self.log_box5.delete("1.0", "end")
         self.log_box5.insert("end", "".join(error_messages))
+        self.log_box5.configure(state="disable")
     
 
     def update_temp(self):
         """Update temperature display"""
         scroll_position = self.log_box1.yview()
+        self.log_box1.configure(state="normal")
         table_data = []
         for i in range(0, 128, 2):
             table_data.append([
@@ -487,10 +591,15 @@ class Debug(ctk.CTkFrame):
         self.log_box1.delete("1.0", "end")
         self.log_box1.insert("end", formatted_text + "\n")
         self.log_box1.yview_moveto(scroll_position[0])
+        self.log_box1.configure(state="disable")
+        self.log_box1.update()  # Force immediate update
+
+
 
     def update_bmsv(self):
         """Update BMS voltage display"""
         scroll_position = self.log_box2.yview()
+        self.log_box2.configure(state="normal")
         table_data = []
         for i in range(0, 600, 2):
             table_data.append([
@@ -500,6 +609,8 @@ class Debug(ctk.CTkFrame):
         self.log_box2.delete("1.0", "end")
         self.log_box2.insert("end", formatted_text + "\n")
         self.log_box2.yview_moveto(scroll_position[0])
+        self.log_box2.configure(state="disable")
+        self.log_box2.update()  # Force immediate GUI update
 
     def start(self):
         """Function to start the serial communication"""
@@ -507,11 +618,21 @@ class Debug(ctk.CTkFrame):
             try:
                 self.ser.open()
             except:
+                self.log_box1.configure(state="normal")
+                self.log_box2.configure(state="normal")
+                self.log_box3.configure(state="normal")
+                self.log_box4.configure(state="normal")
+                self.log_box5.configure(state="normal")
                 self.log_box1.insert("1.0", f"Serial error\n")
                 self.log_box2.insert("1.0", f"Serial error\n")
                 self.log_box3.insert("1.0", f"Serial error\n")
                 self.log_box4.insert("1.0", f"Serial error\n")
                 self.log_box5.insert("1.0", f"Serial error\n")
+                self.log_box1.configure(state="disable")
+                self.log_box2.configure(state="disable")
+                self.log_box3.configure(state="disable")
+                self.log_box4.configure(state="disable")
+                self.log_box5.configure(state="disable")
                 return
         self.is_running = True
         if self.ser:
@@ -526,14 +647,54 @@ class Debug(ctk.CTkFrame):
 
     def clear_logs(self):
         """Function to clear the logs"""
+
+        self.log_box1.configure(state="normal")
+        self.log_box2.configure(state="normal")
+        self.log_box3.configure(state="normal")
+        self.log_box4.configure(state="normal")
+        self.log_box5.configure(state="normal")
+
         self.log_box1.delete("1.0", "end")
         self.log_box2.delete("1.0", "end")
         self.log_box3.delete("1.0", "end")
         self.log_box4.delete("1.0", "end")
         self.log_box5.delete("1.0", "end")
+
+        self.log_box1.configure(state="disable")
+        self.log_box2.configure(state="disable")
+        self.log_box3.configure(state="disable")
+        self.log_box4.configure(state="disable")
+        self.log_box5.configure(state="disable")
+        
         self.setup_variables()
     
+
+    def crc_verify(self, mesaj):
+        message = []
+        divisor = 0x8D
+        message.append(self.header)
+        for i in range(0, len(mesaj)):
+            message.append(mesaj[i])
+        print(message)
+        aux = message[0] 
+
+        for i in range(1, len(mesaj)+1):
+            aux = (aux << 8) | message[i]
+            for j in range(15, 7, -1):
+                if(aux & (1 << j)):
+                    aux ^= divisor << (j-8)
+
+        message_status = aux % 256
+        print(message_status)
+        return message_status
+
     def easter_egg(self):
+        self.log_box1.configure(state="normal")
+        self.log_box2.configure(state="normal")
+        self.log_box3.configure(state="normal")
+        self.log_box4.configure(state="normal")
+        self.log_box5.configure(state="normal")
+
         smug_faces = [
             "( •̀ᴗ•́ )",  # Classic smug
             "( ಠ◡ಠ )",  # Know-it-all smirk
@@ -592,6 +753,11 @@ class Debug(ctk.CTkFrame):
              /　　　 \ 
             (　　　　)
             """)
+        self.log_box1.configure(state="disable")
+        self.log_box2.configure(state="disable")
+        self.log_box3.configure(state="disable")
+        self.log_box4.configure(state="disable")
+        self.log_box5.configure(state="disable")
 
     def on_close(self):
         """Function to close the serial communication"""

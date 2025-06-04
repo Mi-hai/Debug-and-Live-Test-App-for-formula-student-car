@@ -21,6 +21,7 @@ import platform
 root = ctk.CTk()
 root.title("EVR app")
 root.maxsize(1500,800)
+root.minsize(1200,600)
 root.resizable(True,True)
 root.grid_rowconfigure(0, weight=1)
 root.grid_rowconfigure(1, weight=1)

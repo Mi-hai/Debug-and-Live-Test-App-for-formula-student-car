@@ -378,7 +378,7 @@ class Debug(ctk.CTkFrame):
         for i in range(7):
             mesaj.append(self.bufferdata.pop(0))
         if self.crc_verify(mesaj)==0:
-            self.timp = float(mesaj[1] * 256**3 + mesaj[2] * 256**2 + mesaj[3] * 256 + mesaj[4])/(10**mesaj[5])
+            self.timp = float(mesaj[2] * 256**3 + mesaj[3] * 256**2 + mesaj[4] * 256 + mesaj[5])/(10**mesaj[6])
             self.update_text()
             self.log_box3.insert("1.0", f"Time: {self.timp}\n")
             self.header = 0
@@ -597,15 +597,23 @@ class Debug(ctk.CTkFrame):
 
 
     def update_bmsv(self):
-        """Update BMS voltage display"""
+        """Update BMS voltage display using tabulate with fixed formatting"""
         scroll_position = self.log_box2.yview()
         self.log_box2.configure(state="normal")
+        self.log_box2.configure(font=("Courier New", 12))  # Monospace font
+        
         table_data = []
         for i in range(0, 600, 2):
             table_data.append([
-                f"Cell:{i:>3}", f"V:{self.bmsv[i]:6.2f}",f"Cell:{i+1:>3}", f"V:{self.bmsv[i+1]:6.2f}"
+                f"Cell:{i:>3}",
+                f"V:{self.bmsv[i]:6.2f}",
+                f"Cell:{i+1:>3}",
+                f"V:{self.bmsv[i+1]:6.2f}"
             ])
-        formatted_text = tabulate(table_data, tablefmt="plain")
+        
+        # Use tabulate with empty string as colalign to prevent auto-formatting
+        formatted_text = tabulate(table_data, tablefmt="plain",colalign=("left", "left", "left", "left"))
+        
         self.log_box2.delete("1.0", "end")
         self.log_box2.insert("end", formatted_text + "\n")
         self.log_box2.yview_moveto(scroll_position[0])

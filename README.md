@@ -54,7 +54,7 @@ pip install customtkinter pyserial Pillow numpy tabulate
 
 1. **Clone the repository**
    ```sh
-   git clone https://github.com/<your-org-or-username>/Debug-and-Live-Test-App-for-formula-student-car.git
+   git clone https://github.com/Mi-hai/Debug-and-Live-Test-App-for-formula-student-car.git
    cd Debug-and-Live-Test-App-for-formula-student-car
    ```
 2. **Connect the car's data logger** via a serial-to-USB adapter.
